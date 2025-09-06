@@ -24,6 +24,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 // Authentication
 import { useAuthStore } from "./store/authStore";
+import Membership from "./Components/pages/Membership";
 
 const ProtectedRoute: React.FC<{
   isAuth: boolean;
@@ -79,6 +80,7 @@ const App: React.FC = () => {
           <Route path="member-list" element={<UserList />} />
           <Route path="progress" element={<Progress />} />
           <Route path="report" element={<Report />} />
+          <Route path="membership-update/:id" element={<Membership />} />
           <Route path="user-overview/:id" element={<UserOverview />} />
           <Route
             path="membership-details/:id"

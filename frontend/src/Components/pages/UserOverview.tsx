@@ -77,7 +77,7 @@ const UserOverview: React.FC = () => {
   };
 
   const handleClick = () => {
-    navigate("/membership-details", { state: { user } });
+    navigate(`/membership-update/${id}`);
   };
 
   const handleSave = async () => {

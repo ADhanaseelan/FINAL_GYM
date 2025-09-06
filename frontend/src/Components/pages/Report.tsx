@@ -25,10 +25,10 @@ const Report: React.FC = () => {
   const [revenueGraph, setRevenueGraph] = useState<any[]>([]);
   const [membershipData, setMembershipData] = useState<any[]>([]);
   const [reportData, setReportData] = useState({
-    total_revenue: "0",
-    monthly_revenue: "0",
-    gym_members: "0",
-    cardio_members: "0",
+    total_revenue: 0,
+    monthly_revenue: 0,
+    gym_members: 0,
+    cardio_members: 0,
   });
 
   const colorMap: any = {
@@ -39,17 +39,24 @@ const Report: React.FC = () => {
     Others: "#F59E0B",
   };
 
+  // Fetch report data
   const fetchReportData = async () => {
     try {
       const res = await api.get("/get-report");
       if (res.status === 200 && res.data) {
-        setReportData(res.data);
+        setReportData({
+          total_revenue: parseInt(res.data.total_revenue) || 0,
+          monthly_revenue: parseInt(res.data.monthly_revenue) || 0,
+          gym_members: parseInt(res.data.gym_members) || 0,
+          cardio_members: parseInt(res.data.cardio_members) || 0,
+        });
       }
     } catch (error) {
       console.error("Error fetching report data:", error);
     }
   };
 
+  // Fetch revenue graph
   const fetchRevenueGraph = async () => {
     try {
       const endpoint =
@@ -59,13 +66,19 @@ const Report: React.FC = () => {
 
       const res = await api.get(endpoint);
       if (res.status === 200 && res.data) {
-        setRevenueGraph(res.data);
+        const formattedData = res.data.map((item: any) => ({
+          ...item,
+          gym: parseInt(item.gym) || 0,
+          cardio: parseInt(item.cardio) || 0,
+        }));
+        setRevenueGraph(formattedData);
       }
     } catch (error) {
       console.error("Error fetching revenue graph:", error);
     }
   };
 
+  // Fetch membership pie chart
   const fetchMembershipData = async () => {
     try {
       const res = await api.get(
@@ -74,6 +87,7 @@ const Report: React.FC = () => {
       if (res.status === 200 && res.data) {
         const formatted = res.data.map((item: any) => ({
           ...item,
+          value: parseInt(item.value) || 0,
           color: colorMap[item.name] || "#3B82F6",
         }));
         setMembershipData(formatted);
@@ -159,17 +173,18 @@ const Report: React.FC = () => {
 
   return (
     <div className="space-y-8 bg-gray-50">
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           {
             title: "Total Revenue",
-            value: `₹${reportData.total_revenue}`,
+            value: `₹${reportData.total_revenue.toLocaleString()}`,
             icon: <RiCoinsFill className="text-yellow-500 text-2xl" />,
             bg: "bg-yellow-50",
           },
           {
             title: "Month Revenue",
-            value: `₹${reportData.monthly_revenue}`,
+            value: `₹${reportData.monthly_revenue.toLocaleString()}`,
             subtitle: `Current Month`,
             icon: <GiNetworkBars className="text-emerald-500 text-2xl" />,
             bg: "bg-emerald-50",
@@ -198,7 +213,7 @@ const Report: React.FC = () => {
             <h2 className="text-gray-500 text-sm font-medium">{card.title}</h2>
             <div className="flex items-center justify-between mt-4">
               <div>
-                <p className="text-3xl font-bold text-gray-900">{card.value}</p>
+                <p className="text-xl font-bold text-gray-900">{card.value}</p>
                 {card.subtitle && (
                   <span className="text-sm text-gray-400 mt-1 block">
                     {card.subtitle}
@@ -215,7 +230,9 @@ const Report: React.FC = () => {
         ))}
       </div>
 
+      {/* Revenue Analysis + Membership Plan */}
       <div className="flex flex-col lg:flex-row gap-6">
+        {/* Revenue Chart */}
         <motion.div
           initial={{ opacity: 0, x: -60 }}
           animate={{ opacity: 1, x: 0 }}
@@ -251,6 +268,7 @@ const Report: React.FC = () => {
             </div>
           </div>
 
+          {/* Revenue Graph */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -296,6 +314,7 @@ const Report: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Membership Pie Chart */}
         <motion.div
           initial={{ opacity: 0, x: 60 }}
           animate={{ opacity: 1, x: 0 }}

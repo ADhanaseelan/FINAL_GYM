@@ -210,7 +210,7 @@ const UserOverview: React.FC = () => {
             <h4 className="font-semibold text-lg">Progress</h4>
             <button
               className="flex items-center text-blue-500"
-              onClick={() => navigate("/progress", { state: { user } })}
+              onClick={() => navigate(`/progress/${id}`)}
             >
               View More <GrNext />
             </button>

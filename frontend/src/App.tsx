@@ -78,7 +78,7 @@ const App: React.FC = () => {
           <Route path="dashboard" element={<DashboardContent />} />
           <Route path="new-member" element={<NewUser />} />
           <Route path="member-list" element={<UserList />} />
-          <Route path="progress" element={<Progress />} />
+          <Route path="progress/:id" element={<Progress />} />
           <Route path="report" element={<Report />} />
           <Route path="membership-update/:id" element={<Membership />} />
           <Route path="user-overview/:id" element={<UserOverview />} />

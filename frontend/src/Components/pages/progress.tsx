@@ -6,6 +6,7 @@ import { FiDownload } from "react-icons/fi";
 
 // Api
 import { api } from "../../services/api";
+import { useParams } from "react-router-dom";
 
 type ProgressData = {
   date: string;
@@ -18,13 +19,14 @@ type ProgressData = {
 };
 
 const ProgressTracker: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [animatedMetrics, setAnimatedMetrics] = useState<any[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [data, setData] = useState<ProgressData[]>([]);
   const prevMetricsRef = useRef<any[]>([]);
-  const userId = "U001";
+  const userId = id;
 
   useEffect(() => {
     const fetchProgressData = async () => {

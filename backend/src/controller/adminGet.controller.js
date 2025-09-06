@@ -237,19 +237,30 @@ const getExpireMembership = async (req, res) => {
         c.blood_group,
         c.premium_type,
         md.end_date,
-        (md.end_date::date - CURRENT_DATE) AS days_left
+        (md.end_date::date - CURRENT_DATE) AS remaining_days
       FROM candidate c
       JOIN membership_details md 
         ON c.user_id = md.user_id
       WHERE md.end_date IS NOT NULL
-        AND md.end_date::date > CURRENT_DATE
-        AND md.end_date::date <= CURRENT_DATE + INTERVAL '7 days'
+      AND md.end_date::date >= CURRENT_DATE -- only future memberships
+      AND md.end_date::date <= CURRENT_DATE + INTERVAL '7 days' -- expiring within 7 days
       ORDER BY md.end_date ASC;
     `;
 
     const { rows } = await db.query(query);
 
-    res.status(200).json(rows);
+    const formatted = rows.map((row) => ({
+      userId: row.user_id,
+      candidateName: row.candidate_name,
+      phoneNumber: row.phone_number,
+      joiningDate: row.date_of_joining,
+      bloodGroup: row.blood_group,
+      premiumType: row.premium_type,
+      endDate: row.end_date,
+      expireIn: row.remaining_days,
+    }));
+
+    res.status(200).json(formatted);
   } catch (error) {
     console.error("Error fetching expiring memberships:", error);
     res.status(500).json({ message: "Server error" });

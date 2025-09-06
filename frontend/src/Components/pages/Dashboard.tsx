@@ -5,13 +5,11 @@ import {
   HiOutlineArrowTrendingDown,
   HiOutlineArrowUpRight,
 } from "react-icons/hi2";
-
 import { AiOutlineBarChart } from "react-icons/ai";
 import {
   AreaChart,
   Area,
   XAxis,
-  YAxis,
   Tooltip,
   ResponsiveContainer,
   ReferenceDot,
@@ -20,14 +18,14 @@ import { motion } from "framer-motion";
 import { api } from "../../services/api";
 
 interface Member {
-  id: string;
-  name: string;
-  mobile: string;
+  userId: string;
+  candidateName: string;
+  phoneNumber: string;
   joiningDate: string;
-  blood: string;
-  premium: string;
-  expireIn: string;
-  month: string;
+  bloodGroup: string;
+  premiumType: string;
+  endDate: string;
+  expireIn: number;
 }
 
 interface DashboardAPIResponse {
@@ -42,40 +40,46 @@ interface DashboardAPIResponse {
 }
 
 interface DashboardGraph {
-  month : string;
-  total_amount :number;
+  month: string;
+  total_amount: number;
 }
 
 const DashboardContent: React.FC = () => {
-  // const navigate = useNavigate();
-
   const [dashboardData, setDashboardData] =
     useState<DashboardAPIResponse | null>(null);
+  const [data, setData] = useState<DashboardGraph[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState<boolean>(true);
 
-    const [data, setData] = useState<DashboardGraph>([]);
-  // const data = [
-  //   { month: "Jan", revenue: 80000},
-  //   { month: "Feb", revenue: 75000 },
-  //   { month: "Mar", revenue: 90000 },
-  //   { month: "Apr", revenue: 85000 },
-  //   { month: "May", revenue: 30000 },
-  //   { month: "Jun", revenue: 50000 },
-  //   { month: "Jul", revenue: 40000 },
-  //   { month: "Aug", revenue: 60000 },
-  //   { month: "Sep", revenue: 70000},
-  //   { month: "Oct", revenue: 65000 },
-  //   { month: "Nov", revenue: 72000},
-  //   { month: "Dec", revenue: 95000},
-  // ];
-// Month names list
-const monthNames = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
 
-// Get current month index (0–11)
-const currentMonthIndex = new Date().getMonth();
+  const currentMonthIndex = new Date().getMonth();
 
+  // ✅ Format date as DD MMM YYYY
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // ✅ Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
       const response = await api.post("/get-dashboard", {
@@ -88,11 +92,11 @@ const currentMonthIndex = new Date().getMonth();
     }
   };
 
+  // ✅ Fetch revenue graph data
   const fetchGraph = async () => {
     try {
       const response = await api.get(`/get-dashboard-graph`);
       if (response.status === 200) {
-        // console.log(response.data);
         setData(response.data);
       }
     } catch (error) {
@@ -100,143 +104,29 @@ const currentMonthIndex = new Date().getMonth();
     }
   };
 
-  console.log(data);
+  // ✅ Fetch membership expiry list
+  const fetchExpiringMembers = async () => {
+    try {
+      setLoadingMembers(true);
+      const response = await api.get("/get-expiry-list");
+      if (response.status === 200) {
+        setMembers(response.data);
+      } else {
+        setMembers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching expiry members:", error);
+      setMembers([]);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
     fetchGraph();
+    fetchExpiringMembers();
   }, []);
-
-  // Revenue data
-
-  // Member Data
-  const members: Member[] = [
-    {
-      id: "#001",
-      name: "John Doe",
-      mobile: "+91 805658875",
-      joiningDate: "16/12/2025",
-      blood: "O+ve",
-      premium: "Golden Member",
-      expireIn: "2 Days",
-      month: "Dec",
-    },
-    {
-      id: "#002",
-      name: "Harry",
-      mobile: "+91 805658876",
-      joiningDate: "16/11/2025",
-      blood: "O+ve",
-      premium: "Silver Member",
-      expireIn: "3 Days",
-      month: "Nov",
-    },
-    {
-      id: "#003",
-      name: "Willam",
-      mobile: "+91 805658877",
-      joiningDate: "16/10/2025",
-      blood: "O+ve",
-      premium: "Diamond Member",
-      expireIn: "3 Days",
-      month: "Oct",
-    },
-    {
-      id: "#004",
-      name: "Paul",
-      mobile: "+91 805658878",
-      joiningDate: "16/01/2025",
-      blood: "O+ve",
-      premium: "Platinum Member",
-      expireIn: "3 Days",
-      month: "Jan",
-    },
-    {
-      id: "#005",
-      name: "Potter",
-      mobile: "+91 805658879",
-      joiningDate: "16/02/2025",
-      blood: "O+ve",
-      premium: "Golden Member",
-      expireIn: "3 Days",
-      month: "Feb",
-    },
-    {
-      id: "#006",
-      name: "Smith",
-      mobile: "+91 805658871",
-      joiningDate: "16/03/2025",
-      blood: "O+ve",
-      premium: "Golden Member",
-      expireIn: "3 Days",
-      month: "Mar",
-    },
-    {
-      id: "#007",
-      name: "Jack",
-      mobile: "+91 805658872",
-      joiningDate: "16/04/2025",
-      blood: "O+ve",
-      premium: "Golden Member",
-      expireIn: "3 Days",
-      month: "Apr",
-    },
-    {
-      id: "#008",
-      name: "Pedric",
-      mobile: "+91 805658873",
-      joiningDate: "16/05/2025",
-      blood: "O+ve",
-      premium: "Golden Member",
-      expireIn: "3 Days",
-      month: "May",
-    },
-    {
-      id: "#009",
-      name: "Joe",
-      mobile: "+91 805658874",
-      joiningDate: "16/06/2025",
-      blood: "O+ve",
-      premium: "Golden Member",
-      expireIn: "3 Days",
-      month: "Jun",
-    },
-  ];
-
-  // Sliding window for 6 months
-  // const windowSize = 6;
-  // const [windowStart, setWindowStart] = useState(0); // index of first visible month
-  // const [activeIndex, setActiveIndex] = useState(5); // Default June (index in data)
-  // const current = data[activeIndex];
-
-  // // Move window and activeIndex when navigating
-  // const handleNext = () => {
-  //   // If at end of window, shift window right
-  //   if (
-  //     activeIndex === windowStart + windowSize - 1 &&
-  //     windowStart + windowSize < data.length
-  //   ) {
-  //     setWindowStart(windowStart + 1);
-  //     setActiveIndex(activeIndex + 1);
-  //   } else if (activeIndex < data.length - 1) {
-  //     setActiveIndex(activeIndex + 1);
-  //   }
-  // };
-
-  // const handlePrev = () => {
-  //   // If at start of window, shift window left
-  //   if (activeIndex === windowStart && windowStart > 0) {
-  //     setWindowStart(windowStart - 1);
-  //     setActiveIndex(activeIndex - 1);
-  //   } else if (activeIndex > 0) {
-  //     setActiveIndex(activeIndex - 1);
-  //   }
-  // };
-
-  // // Only show 6 months in the chart window
-  // const chartData = data.slice(windowStart, windowStart + windowSize);
-
-  // // Filter members by current.month
-  const filteredMembers = members.filter((m) => m.month === data.month);
 
   return (
     <div className="bg-white min-h-screen max-md:p-0">
@@ -256,10 +146,7 @@ const currentMonthIndex = new Date().getMonth();
               gap: "10px",
               borderRadius: "10px",
               borderWidth: "1px",
-              paddingTop: "20px",
-              paddingRight: "25px",
-              paddingBottom: "20px",
-              paddingLeft: "25px",
+              padding: "20px 25px",
             }}
           >
             <div className="flex items-start justify-between mb-4">
@@ -269,12 +156,6 @@ const currentMonthIndex = new Date().getMonth();
                 </div>
                 <p className="text-lg font-medium">Revenue</p>
               </div>
-              {/* <button
-                onClick={handlePrev}
-                className="text-white text-lg hover:text-gray-300 transition"
-              >
-
-              </button> */}
             </div>
 
             <div className="flex items-center justify-between mb-4">
@@ -284,14 +165,17 @@ const currentMonthIndex = new Date().getMonth();
                 </h2>
                 <div
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
-                    !dashboardData?.isProfitRevenue ? "bg-red-500" : "bg-green-500"
+                    !dashboardData?.isProfitRevenue
+                      ? "bg-red-500"
+                      : "bg-green-500"
                   }`}
                   style={{
-                    backgroundColor: !dashboardData?.isProfitRevenue ? "#ef4444" : "#22c55e",
-                    boxShadow:
-                      !dashboardData?.isProfitRevenue
-                        ? "0 0 20px rgba(239, 68, 68, 0.4)"
-                        : "0 0 20px rgba(34, 197, 94, 0.4)",
+                    backgroundColor: !dashboardData?.isProfitRevenue
+                      ? "#ef4444"
+                      : "#22c55e",
+                    boxShadow: !dashboardData?.isProfitRevenue
+                      ? "0 0 20px rgba(239, 68, 68, 0.4)"
+                      : "0 0 20px rgba(34, 197, 94, 0.4)",
                     color: "white",
                   }}
                 >
@@ -304,19 +188,10 @@ const currentMonthIndex = new Date().getMonth();
                 </div>
               </div>
               <div className="text-right">
-  <div className="text-xl font-semibold">
-    {monthNames[currentMonthIndex]}
-  </div>
-</div>
-
-            </div>
-
-            <div className="flex items-center justify-between">
-              {/* <button
-                onClick={handleNext}
-                className="text-white text-lg hover:text-gray-300 transition"
-              >
-              </button> */}
+                <div className="text-xl font-semibold">
+                  {monthNames[currentMonthIndex]}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -329,10 +204,7 @@ const currentMonthIndex = new Date().getMonth();
               gap: "10px",
               borderRadius: "10px",
               borderWidth: "1px",
-              paddingTop: "20px",
-              paddingRight: "25px",
-              paddingBottom: "20px",
-              paddingLeft: "25px",
+              padding: "20px 25px",
             }}
           >
             <div className="flex items-center gap-3 mb-6">
@@ -350,13 +222,17 @@ const currentMonthIndex = new Date().getMonth();
               </div>
               <div
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
-                  !dashboardData?.isProfitCandidate ? "bg-red-500" : "bg-green-500"
+                  !dashboardData?.isProfitCandidate
+                    ? "bg-red-500"
+                    : "bg-green-500"
                 }`}
                 style={{
-                  backgroundColor: !dashboardData?.isProfitCandidate  ? "#ef4444" : "#22c55e",
-                  boxShadow:
-                    !dashboardData?.isProfitCandidate ? "0 0 20px rgba(239, 68, 68, 0.4)"
-                      : "0 0 20px rgba(34, 197, 94, 0.4)",
+                  backgroundColor: !dashboardData?.isProfitCandidate
+                    ? "#ef4444"
+                    : "#22c55e",
+                  boxShadow: !dashboardData?.isProfitCandidate
+                    ? "0 0 20px rgba(239, 68, 68, 0.4)"
+                    : "0 0 20px rgba(34, 197, 94, 0.4)",
                   color: "white",
                 }}
               >
@@ -371,7 +247,7 @@ const currentMonthIndex = new Date().getMonth();
           </div>
         </motion.div>
 
-        {/* Revenue Chart - Full Year */}
+        {/* Revenue Chart */}
         <motion.div
           className="bg-black rounded-xl p-6 shadow-md lg:col-span-2 flex flex-col justify-between min-h-[350px]"
           initial={{ opacity: 0, x: 50 }}
@@ -381,7 +257,6 @@ const currentMonthIndex = new Date().getMonth();
             Revenue Analysis
           </h3>
 
-          {/* ✅ Scrollable wrapper for mobile */}
           <div className="overflow-x-auto">
             <div className="min-w-[600px]">
               <ResponsiveContainer width="100%" height={250}>
@@ -408,7 +283,6 @@ const currentMonthIndex = new Date().getMonth();
                     padding={{ left: 10, right: 10 }}
                     tick={{ fontSize: 12, textAnchor: "middle" }}
                   />
-                  {/* <YAxis /> */}
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#111",
@@ -425,8 +299,8 @@ const currentMonthIndex = new Date().getMonth();
                     strokeWidth={2}
                   />
                   <ReferenceDot
-                    x={data.month}
-                    y={data.total_amount}
+                    x={data?.[data.length - 1]?.month}
+                    y={data?.[data.length - 1]?.total_amount}
                     r={6}
                     fill="#22c55e"
                     stroke="#fff"
@@ -472,35 +346,44 @@ const currentMonthIndex = new Date().getMonth();
               </tr>
             </thead>
             <tbody className="bg-white">
-              {filteredMembers.length > 0 ? (
-                filteredMembers.map((m, idx) => (
+              {loadingMembers ? (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="text-center py-8 text-gray-500 text-sm"
+                  >
+                    Loading members...
+                  </td>
+                </tr>
+              ) : members.length > 0 ? (
+                members.map((m, idx) => (
                   <tr
                     key={idx}
                     className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="py-4 px-6 text-sm text-gray-900">{m.id}</td>
                     <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.name}
+                      {m.userId}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.mobile}
+                      {m.candidateName}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.joiningDate}
+                      {m.phoneNumber}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.blood}
+                      {formatDate(m.joiningDate)}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.premium}
+                      {m.bloodGroup}
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.expireIn}
+                      {m.premiumType} Months
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-900">
+                      {m.expireIn} days
                     </td>
                     <td className="py-4 px-6 text-gray-400 hover:text-gray-600 transition-colors">
-                      <span className="">
-                        <HiOutlineArrowUpRight />
-                      </span>
+                      <HiOutlineArrowUpRight />
                     </td>
                   </tr>
                 ))
@@ -510,7 +393,7 @@ const currentMonthIndex = new Date().getMonth();
                     colSpan={8}
                     className="text-center py-8 text-gray-500 text-sm"
                   >
-                    No members found for {data.month}.
+                    No members expiring soon.
                   </td>
                 </tr>
               )}

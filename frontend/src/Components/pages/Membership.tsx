@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   LabelInput,
   CustomDropdown,
@@ -14,7 +14,6 @@ import { api } from "../../services/api";
 type MembershipForm = {
   name: string;
   userId: string;
-  membershipType: string;
   amount: string;
   duration: string;
   startDate: string;
@@ -28,6 +27,9 @@ const Membership = () => {
   const userId = id;
   const navigate = useNavigate();
 
+  const [membershipHistory, setMembershipHistory] = useState<any[]>([]);
+  const [latestMembership, setLatestMembership] = useState<any>(null);
+
   const {
     register,
     setValue,
@@ -38,57 +40,130 @@ const Membership = () => {
     defaultValues: {
       name: "",
       userId: userId,
-      membershipType: "",
-      amount: "0",
-      duration: "0",
-      startDate: "0",
-      endDate: "0",
+      amount: "",
+      duration: "1",
+      startDate: "",
+      endDate: "",
       paymentType: "",
       status: "Active",
     },
   });
 
   const name = watch("name");
-  const membershipType = watch("membershipType");
-  const amount = watch("amount");
+  const duration = watch("duration");
   const startDate = watch("startDate");
-  const endDate = watch("endDate");
-  const status = watch("status");
+  // const amount = watch("amount");
+  const paymentType = watch("paymentType");
 
+  // ✅ Auto-calculate end date based on start date + duration
+  useEffect(() => {
+    if (!duration) return;
+
+    const start = startDate ? new Date(startDate) : new Date();
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + Number(duration));
+
+    const formattedEndDate = end.toISOString().split("T")[0];
+    setValue("endDate", formattedEndDate);
+  }, [duration, startDate, setValue]);
+
+  // ✅ Fetch latest membership + history
   useEffect(() => {
     const fetchMembership = async () => {
       try {
-        const response = await api.get(`/get-membership/${userId}`);
+        const response = await api.get(`/get-old-membership/${userId}`);
         const data = response.data;
 
+        // ✅ Set candidate name
         setValue("name", data.candidateName || "");
-        setValue("membershipType", data.membershipType || "0");
-        setValue("amount", data.amount?.toString() || "0");
-        setValue("duration", data.durationMonths?.toString() || "0");
-        setValue("startDate", data.startDate || "0");
-        setValue("endDate", data.endDate || "0");
+
+        // ✅ Save latest membership separately
+        if (data.latestMembership) {
+          setLatestMembership(data.latestMembership);
+
+          setValue("amount", data.latestMembership.amount || "");
+          setValue(
+            "duration",
+            data.latestMembership.durationMonths?.toString() || "1"
+          );
+          setValue(
+            "startDate",
+            data.latestMembership.startDate
+              ? formatDate(data.latestMembership.startDate)
+              : ""
+          );
+          setValue(
+            "endDate",
+            data.latestMembership.endDate
+              ? formatDate(data.latestMembership.endDate)
+              : ""
+          );
+        }
+
+        setMembershipHistory(data.membershipHistory || []);
       } catch (error) {
-        console.error("Error fetching membership:", error);
+        console.error("❌ Error fetching membership:", error);
       }
     };
 
     if (userId) fetchMembership();
   }, [userId, setValue]);
 
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    return d.toISOString().split("T")[0];
+  };
+
+  const getPaymentStatus = (endDate: string) => {
+    if (!endDate) return "N/A";
+    const today = new Date();
+    const expiry = new Date(endDate);
+    return expiry >= today ? "Active" : "Expired";
+  };
+
   const handleCancel = () => {
     navigate(-2);
   };
 
-  const onSubmit = (data: MembershipForm) => {
-    toast(
-      <ToastMessage
-        title="Success"
-        description="Membership details saved successfully."
-        type="success"
-      />
-    );
-    console.log("Saved data:", data);
-    navigate("/user-overview");
+  // ✅ Validate all required fields before submit
+  const validateForm = (data: MembershipForm) => {
+    if (!data.name.trim()) return "Name is required";
+    if (!data.amount.trim()) return "Amount is required";
+    if (!data.duration) return "Duration is required";
+    if (!data.startDate) return "Start Date is required";
+    if (!data.endDate) return "End Date is required";
+    return null;
+  };
+
+  const onSubmit = async (data: MembershipForm) => {
+    const error = validateForm(data);
+    if (error) {
+      toast(<ToastMessage title="Error" description={error} type="error" />);
+      return;
+    }
+
+    try {
+      const payload = {
+        ...data,
+        memberName: data.name, // send as memberName for backend
+      };
+
+      await api.put(`/upgrade-premium`, payload);
+
+      toast(
+        <ToastMessage
+          title="Success"
+          description="Membership details saved successfully."
+          type="success"
+        />
+      );
+
+      const response = await api.get(`/get-old-membership/${userId}`);
+      setLatestMembership(response.data.latestMembership);
+      setMembershipHistory(response.data.membershipHistory || []);
+    } catch (error) {
+      console.error("❌ Error saving membership:", error);
+    }
   };
 
   return (
@@ -106,12 +181,15 @@ const Membership = () => {
             <h3 className="text-xl font-semibold">{name}</h3>
             <p className="text-sm text-gray-700">ID: {userId || "001"}</p>
             <p className="text-xs text-gray-400">
-              Since {startDate !== "0" ? startDate : "N/A"}
+              Since{" "}
+              {latestMembership?.startDate && latestMembership.startDate !== "0"
+                ? latestMembership.startDate
+                : "N/A"}
             </p>
           </div>
         </div>
         <span className="bg-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium">
-          {status || "Active"}
+          Active
         </span>
       </div>
 
@@ -119,22 +197,32 @@ const Membership = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 mb-6">
         <div className="bg-white p-4 rounded-lg shadow text-center">
           <p className="text-sm text-gray-500">Membership</p>
-          <span className="text-lg font-bold">{membershipType || "0"}</span>
+          <span className="text-lg font-bold">
+            {latestMembership?.durationMonths
+              ? `${latestMembership.durationMonths} Months`
+              : "Not Available"}
+          </span>
         </div>
         <div className="bg-white p-4 rounded-lg shadow text-center">
           <p className="text-sm text-gray-500">Membership Amount</p>
-          <span className="text-lg font-bold">{amount || "0"}</span>
+          <span className="text-lg font-bold">
+            {latestMembership?.amount || "0"}
+          </span>
         </div>
         <div className="bg-white p-4 rounded-lg shadow text-center">
           <p className="text-sm text-gray-500">Start Date</p>
           <span className="text-lg font-bold">
-            {startDate !== "0" ? startDate : "0"}
+            {latestMembership?.startDate && latestMembership.startDate !== "0"
+              ? latestMembership.startDate
+              : "N/A"}
           </span>
         </div>
         <div className="bg-white p-4 rounded-lg shadow text-center">
           <p className="text-sm text-gray-500">End Date</p>
           <span className="text-lg font-bold">
-            {endDate !== "0" ? endDate : "0"}
+            {latestMembership?.endDate && latestMembership.endDate !== "0"
+              ? latestMembership.endDate
+              : "N/A"}
           </span>
         </div>
       </div>
@@ -145,30 +233,26 @@ const Membership = () => {
         className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-6 rounded-lg shadow"
       >
         <LabelInput label="Name" {...register("name")} />
+        <LabelInput label="Amount" {...register("amount")} />
 
         <CustomDropdown
-          label="Membership Type"
-          value={membershipType}
+          label="Duration (Months)"
+          value={duration}
           options={[
-            { label: "Golden", value: "Golden" },
-            { label: "Silver", value: "Silver" },
-            { label: "Platinum", value: "Platinum" },
-            { label: "Diamond", value: "Diamond" },
+            { label: "1 Month", value: "1" },
+            { label: "3 Months", value: "3" },
+            { label: "6 Months", value: "6" },
+            { label: "12 Months", value: "12" },
           ]}
-          onChange={(value) => setValue("membershipType", value)}
+          onChange={(value) => setValue("duration", value)}
         />
 
-        <LabelInput label="Amount" {...register("amount")} />
-        <LabelInput label="Duration (Months)" {...register("duration")} />
-
-        {/* ✅ Start Date editable */}
         <LabelInput type="date" label="Start Date" {...register("startDate")} />
-        {/* ✅ End Date editable */}
         <LabelInput type="date" label="End Date" {...register("endDate")} />
 
         <CustomDropdown
           label="Payment Type"
-          value={watch("paymentType")}
+          value={paymentType}
           options={[
             { label: "Online", value: "Online" },
             { label: "Cash", value: "Cash" },
@@ -185,6 +269,51 @@ const Membership = () => {
           label={isSubmitting ? "Saving..." : "Save"}
           onClick={handleSubmit(onSubmit)}
         />
+      </div>
+
+      {/* Membership History Table */}
+      <div className="mt-8 bg-white p-4 rounded-lg shadow">
+        <h3 className="text-lg font-semibold mb-3">Membership History</h3>
+        {membershipHistory.length === 0 ? (
+          <p className="text-gray-500 text-sm">
+            No membership history available.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="table-auto border-collapse border border-gray-200 w-full text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border p-2 text-left">S.No</th>
+                  <th className="border p-2 text-left">Amount</th>
+                  <th className="border p-2 text-left">Duration (Months)</th>
+                  <th className="border p-2 text-left">Start Date</th>
+                  <th className="border p-2 text-left">End Date</th>
+                  <th className="border p-2 text-left">Payment Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {membershipHistory.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="border p-2">{index + 1}</td>
+                    <td className="border p-2">{item.amount}</td>
+                    <td className="border p-2">{item.durationMonths}</td>
+                    <td className="border p-2">{item.startDate}</td>
+                    <td className="border p-2">{item.endDate}</td>
+                    <td
+                      className={`border p-2 font-medium ${
+                        getPaymentStatus(item.endDate) === "Active"
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {getPaymentStatus(item.endDate)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

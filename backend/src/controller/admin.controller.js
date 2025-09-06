@@ -63,9 +63,9 @@ const upgradePremium = async (req, res) => {
   const {
     userId,
     memberName,
-    memberType,
     amount,
     duration,
+    startDate,
     endDate,
     paymentType,
   } = req.body;
@@ -74,12 +74,11 @@ const upgradePremium = async (req, res) => {
   try {
     await client.query("BEGIN");
 
-    const memberTypeLower = memberType.toLowerCase();
     const paymentTypeLower = paymentType.toLowerCase();
 
     const insertMembershipQuery = `
       INSERT INTO membership_details (
-        user_id, member_name, member_type, amount, duration, end_date, payment_type
+        user_id, member_name, amount, duration, start_date, end_date, payment_type
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *;
     `;
@@ -87,9 +86,9 @@ const upgradePremium = async (req, res) => {
     const membershipValues = [
       userId,
       memberName,
-      memberTypeLower,
       amount,
       duration,
+      startDate,
       endDate,
       paymentTypeLower,
     ];

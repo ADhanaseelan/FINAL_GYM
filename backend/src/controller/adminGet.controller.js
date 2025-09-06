@@ -89,50 +89,50 @@ const getMembershipDetails = async (req, res) => {
 
     const query = `
       SELECT 
+        c.candidate_name,
         m.member_name,
         COALESCE(m.amount, 0) AS amount,
-        COALESCE(TO_CHAR(m.start_date, 'FMDD Mon YYYY'), '0') AS start_date,
-        COALESCE(TO_CHAR(m.end_date, 'FMDD Mon YYYY'), '0') AS end_date,
-        COALESCE(
-          DATE_PART('year', AGE(m.end_date, m.start_date)) * 12 +
-          DATE_PART('month', AGE(m.end_date, m.start_date)), 
-          0
-        ) AS months
-      FROM membership_details m
-      WHERE m.user_id = $1
+        TO_CHAR(m.start_date, 'FMDD Mon YYYY') AS start_date,
+        TO_CHAR(m.end_date, 'FMDD Mon YYYY') AS end_date,
+        COALESCE(m.duration, 0) AS duration_months
+      FROM candidate c
+      LEFT JOIN membership_details m
+        ON c.user_id = m.user_id
+      WHERE c.user_id = $1
+      ORDER BY m.end_date DESC NULLS LAST;
     `;
 
     const { rows } = await db.query(query, [userId]);
 
     if (rows.length === 0) {
-      const candidateQuery = `
-        SELECT candidate_name 
-        FROM candidate 
-        WHERE user_id = $1
-      `;
-      const candidateResult = await db.query(candidateQuery, [userId]);
-
-      if (candidateResult.rows.length === 0) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      return res.status(200).json({
-        userId,
-        candidateName: candidateResult.rows[0].candidate_name,
-        amount: 0,
-        startDate: "0",
-        endDate: "0",
-        durationMonths: 0,
-      });
+      return res.status(404).json({ error: "User not found" });
     }
+
+    const candidateName = rows[0].candidate_name;
+
+    const latestMembership = rows.find((row) => row.member_name) || null;
 
     return res.status(200).json({
       userId,
-      memberName: rows[0].member_name,
-      amount: rows[0].amount,
-      startDate: rows[0].start_date,
-      endDate: rows[0].end_date,
-      durationMonths: rows[0].months,
+      candidateName,
+      latestMembership: latestMembership
+        ? {
+            memberName: latestMembership.member_name,
+            amount: latestMembership.amount,
+            startDate: latestMembership.start_date,
+            endDate: latestMembership.end_date,
+            durationMonths: latestMembership.duration_months,
+          }
+        : null,
+      membershipHistory: rows
+        .filter((row) => row.member_name)
+        .map((row) => ({
+          memberName: row.member_name,
+          amount: row.amount,
+          startDate: row.start_date,
+          endDate: row.end_date,
+          durationMonths: row.duration_months,
+        })),
     });
   } catch (err) {
     console.error("Error fetching membership details:", err);

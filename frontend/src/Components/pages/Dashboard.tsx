@@ -344,23 +344,21 @@ const DashboardContent: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Revenue Chart */}
+        {/* Revenue Chart - Full Year */}
         <motion.div
-          className="bg-black rounded-xl p-4 sm:p-6 shadow-md lg:col-span-2 flex flex-col lg:flex-row items-stretch justify-between min-h-[350px]"
+          className="bg-black rounded-xl p-6 shadow-md lg:col-span-2 flex flex-col justify-between min-h-[350px]"
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
         >
-          {/* Chart and navigation */}
-          <div className="flex flex-col justify-between w-full lg:w-2/3">
-            <h3 className="text-white text-xl sm:text-2xl font-extrabold mb-4 text-left">
-              Revenue Analysis
-            </h3>
-            <div>
-              <ResponsiveContainer width="100%" height={200}>
-                <AreaChart
-                  data={chartData}
-                  margin={{ left: 0, right: 0, top: 20, bottom: -10 }}
-                >
+          <h3 className="text-white text-xl font-extrabold mb-4">
+            Revenue Analysis
+          </h3>
+
+          {/* ✅ Scrollable wrapper for mobile */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[600px]">
+              <ResponsiveContainer width="100%" height={250}>
+                <AreaChart data={data}>
                   <defs>
                     <linearGradient
                       id="colorRevenue"
@@ -375,15 +373,11 @@ const DashboardContent: React.FC = () => {
                   </defs>
                   <XAxis
                     dataKey="month"
-                    type="category"
-                    scale="point"
-                    padding={{ left: 55, right: 55 }}
-                    stroke="transparent"
+                    stroke="#ccc"
                     axisLine={false}
                     tickLine={false}
                     interval={0}
-                    tickMargin={10}
-                    tick={false}
+                    tick={{ fontSize: 12, textAnchor: "end" }}
                   />
                   <YAxis hide />
                   <Tooltip
@@ -400,112 +394,17 @@ const DashboardContent: React.FC = () => {
                     stroke="#22c55e"
                     fill="url(#colorRevenue)"
                     strokeWidth={2}
-                    dot={false}
                   />
-                  {/* Only show ReferenceDot if activeIndex is in window */}
-                  {activeIndex >= windowStart &&
-                    activeIndex < windowStart + windowSize && (
-                      <ReferenceDot
-                        x={data[activeIndex].month}
-                        y={data[activeIndex].revenue}
-                        r={6}
-                        fill="#22c55e"
-                        stroke="#fff"
-                        strokeWidth={2}
-                        ifOverflow="extendDomain"
-                      />
-                    )}
+                  <ReferenceDot
+                    x={current.month}
+                    y={current.revenue}
+                    r={6}
+                    fill="#22c55e"
+                    stroke="#fff"
+                    strokeWidth={2}
+                  />
                 </AreaChart>
               </ResponsiveContainer>
-            </div>
-            <div className="flex items-center justify-between -mt-10 px-4">
-              <button
-                onClick={handlePrev}
-                className="text-white text-2xl font-bold focus:outline-none"
-                aria-label="Previous Month"
-                disabled={activeIndex === 0}
-                style={{ opacity: activeIndex === 0 ? 0.3 : 1 }}
-              >
-                &#x2039;
-              </button>
-              <div className="flex justify-between flex-1 px-4">
-                {chartData.map((d, idx) => {
-                  const realIdx = windowStart + idx;
-                  return (
-                    <span
-                      key={d.month}
-                      className={`text-white text-sm sm:text-base font-semibold ${
-                        activeIndex === realIdx ? "text-green-400" : ""
-                      }`}
-                    >
-                      {d.month}
-                    </span>
-                  );
-                })}
-              </div>
-              <button
-                onClick={handleNext}
-                className="text-white text-2xl font-bold focus:outline-none"
-                aria-label="Next Month"
-                disabled={activeIndex === data.length - 1}
-                style={{ opacity: activeIndex === data.length - 1 ? 0.3 : 1 }}
-              >
-                &#x203A;
-              </button>
-            </div>
-          </div>
-          {/* Text + Buttons */}
-          <div
-            className="flex flex-col justify-center items-start mt-6 lg:mt-0 lg:ml-6 xl:ml-8 w-full lg:w-auto sm:items-center sm:text-center"
-            style={{
-              width: "100%",
-              maxWidth: "270px",
-              height: "auto",
-              minHeight: "184px",
-              gap: "24px",
-            }}
-          >
-            <h2 className="text-white text-lg sm:text-xl lg:text-2xl font-bold leading-tight text-left w-full">
-              <span className="block">
-                Your <span className="text-cyan-400">Fit</span>
-                <span className="text-white">ness</span>
-              </span>
-              <span className="block font-bold italic">Program Analytics</span>
-            </h2>
-
-            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 sm:gap-4 w-full">
-              <button
-                onClick={() => navigate("/new-member")}
-                className="flex items-center justify-center text-black font-semibold focus:outline-none hover:opacity-90 transition w-full sm:w-auto mb-3 sm:mb-0"
-                style={{
-                  backgroundColor: "#00E0C6",
-                  boxShadow: "0 0 15px rgba(0, 224, 198, 0.5)",
-                  minWidth: "180px",
-                  height: "50px",
-                  borderRadius: "8px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  border: "none",
-                }}
-              >
-                + New Member
-              </button>
-              <button
-                onClick={() => navigate("/member-list")}
-                className="flex items-center justify-center text-white font-semibold focus:outline-none hover:bg-white hover:text-black transition w-full sm:w-auto"
-                style={{
-                  minWidth: "180px",
-                  height: "50px",
-                  borderRadius: "8px",
-                  border: "2px solid #FFFFFF",
-                  backgroundColor: "transparent",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                }}
-              >
-                <FiUsers className="mr-[13px]" />
-                Member List
-              </button>
             </div>
           </div>
         </motion.div>

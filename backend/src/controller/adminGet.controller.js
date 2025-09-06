@@ -236,13 +236,19 @@ const getExpireMembership = async (req, res) => {
         c.date_of_joining,
         c.blood_group,
         c.premium_type,
-        md.end_date
+        md.end_date,
+        (md.end_date::date - CURRENT_DATE) AS days_left
       FROM candidate c
       JOIN membership_details md 
         ON c.user_id = md.user_id
-      WHERE md.end_date IS NOT NULL;
+      WHERE md.end_date IS NOT NULL
+        AND md.end_date::date > CURRENT_DATE
+        AND md.end_date::date <= CURRENT_DATE + INTERVAL '7 days'
+      ORDER BY md.end_date ASC;
     `;
+
     const { rows } = await db.query(query);
+
     res.status(200).json(rows);
   } catch (error) {
     console.error("Error fetching expiring memberships:", error);

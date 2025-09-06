@@ -49,23 +49,6 @@ const DashboardContent: React.FC = () => {
   const [dashboardData, setDashboardData] =
     useState<DashboardAPIResponse | null>(null);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await api.post("/get-dashboard", {
-          year: 2025,
-          month: 9,
-        });
-        setDashboardData(response.data);
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  // Revenue data
   const data = [
     { month: "Jan", revenue: 80000, change: 3 },
     { month: "Feb", revenue: 75000, change: -1 },
@@ -80,6 +63,36 @@ const DashboardContent: React.FC = () => {
     { month: "Nov", revenue: 72000, change: 3 },
     { month: "Dec", revenue: 95000, change: 5 },
   ];
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await api.post("/get-dashboard", {
+        year: 2025,
+        month: 9,
+      });
+      setDashboardData(response.data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    }
+  };
+
+  const fetchGraph = async () => {
+    try {
+      const response = await api.get(`/get-dashboard-graph`);
+      if (response.status === 200) {
+        console.log(response.data);
+      }
+    } catch (error) {
+      console.error("API fetch error:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+    fetchGraph();
+  }, []);
+
+  // Revenue data
 
   // Member Data
   const members: Member[] = [

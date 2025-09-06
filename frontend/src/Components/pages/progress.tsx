@@ -28,38 +28,39 @@ const ProgressTracker: React.FC = () => {
   const prevMetricsRef = useRef<any[]>([]);
   const userId = id;
 
-  useEffect(() => {
-    const fetchProgressData = async () => {
-      try {
-        const response = await api.get(`progress/${userId}`);
-        if (response.status === 200 && response.data?.data?.length) {
-          const sortedData = response.data.data
-            .map((item: any) => ({
-              date: item.entry_date,
-              weight: item.weight_kg,
-              fat: item.fat,
-              vfat: item.v_fat,
-              bmr: item.bmr,
-              bmi: item.bmi,
-              bodyAge: item.b_age,
-            }))
-            .sort(
-              (a: any, b: any) =>
-                new Date(b.date).getTime() - new Date(a.date).getTime()
-            );
-          setData(sortedData);
-          if (sortedData.length >= 2) {
-            setFromDate(sortedData[1].date);
-            setToDate(sortedData[0].date);
-            setSelectedRows([sortedData[1].date, sortedData[0].date]);
-          }
-        } else {
-          setData([]);
+  const fetchProgressData = async () => {
+    try {
+      const response = await api.get(`progress/${userId}`);
+      if (response.status === 200 && response.data?.data?.length) {
+        const sortedData = response.data.data
+          .map((item: any) => ({
+            date: item.entry_date,
+            weight: item.weight_kg,
+            fat: item.fat,
+            vfat: item.v_fat,
+            bmr: item.bmr,
+            bmi: item.bmi,
+            bodyAge: item.b_age,
+          }))
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+        setData(sortedData);
+        if (sortedData.length >= 2) {
+          setFromDate(sortedData[1].date);
+          setToDate(sortedData[0].date);
+          setSelectedRows([sortedData[1].date, sortedData[0].date]);
         }
-      } catch (error) {
-        console.error("API fetch error:", error);
+      } else {
+        setData([]);
       }
-    };
+    } catch (error) {
+      console.error("API fetch error:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchProgressData();
   }, [userId]);
 

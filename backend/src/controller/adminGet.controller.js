@@ -347,7 +347,7 @@ const getDashboard = async (req, res) => {
 };
 
 const getDashboardGraph = async (req, res) => {
-  const { year } = req.body;
+  const year = new Date().getFullYear();
 
   const query = `
     WITH months AS (

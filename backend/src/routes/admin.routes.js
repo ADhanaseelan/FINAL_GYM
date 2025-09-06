@@ -80,6 +80,7 @@ router.post("/logout", handleLogout);
 router.post("/get-dashboard", authMiddleware, getDashboard);
 
 // Routes Get
+router.get("/get-old-membership/:id", authMiddleware);
 router.get("/new-user-id", authMiddleware, getNewUserId);
 router.get("/get-list", authMiddleware, getCandidateLists);
 router.get("/progress/:id", authMiddleware, getAllProgress);

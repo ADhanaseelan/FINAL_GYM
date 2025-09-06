@@ -19,7 +19,6 @@ CREATE TABLE progress_tracking (
 CREATE TABLE membership_details (
   user_id VARCHAR(10) NOT NULL,
   member_name VARCHAR(100) NOT NULL,
-  member_type VARCHAR(50) NOT NULL,
   amount DECIMAL(8,2),
   duration INT,
   start_date DATE DEFAULT CURRENT_DATE,

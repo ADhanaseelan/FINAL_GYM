@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import { FiUsers } from "react-icons/fi";
 import {
   HiOutlineArrowTrendingUp,
@@ -7,7 +6,6 @@ import {
   HiOutlineArrowUpRight,
 } from "react-icons/hi2";
 
-import { useNavigate } from "react-router-dom";
 import { AiOutlineBarChart } from "react-icons/ai";
 import {
   AreaChart,
@@ -43,26 +41,40 @@ interface DashboardAPIResponse {
   members: Member[];
 }
 
+interface DashboardGraph {
+  month : string;
+  total_amount :number;
+}
+
 const DashboardContent: React.FC = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [dashboardData, setDashboardData] =
     useState<DashboardAPIResponse | null>(null);
 
-  const data = [
-    { month: "Jan", revenue: 80000, change: 3 },
-    { month: "Feb", revenue: 75000, change: -1 },
-    { month: "Mar", revenue: 90000, change: 7 },
-    { month: "Apr", revenue: 85000, change: -4 },
-    { month: "May", revenue: 30000, change: -5 },
-    { month: "Jun", revenue: 50000, change: 2 },
-    { month: "Jul", revenue: 40000, change: -3 },
-    { month: "Aug", revenue: 60000, change: 4 },
-    { month: "Sep", revenue: 70000, change: 2 },
-    { month: "Oct", revenue: 65000, change: -1 },
-    { month: "Nov", revenue: 72000, change: 3 },
-    { month: "Dec", revenue: 95000, change: 5 },
-  ];
+    const [data, setData] = useState<DashboardGraph>([]);
+  // const data = [
+  //   { month: "Jan", revenue: 80000},
+  //   { month: "Feb", revenue: 75000 },
+  //   { month: "Mar", revenue: 90000 },
+  //   { month: "Apr", revenue: 85000 },
+  //   { month: "May", revenue: 30000 },
+  //   { month: "Jun", revenue: 50000 },
+  //   { month: "Jul", revenue: 40000 },
+  //   { month: "Aug", revenue: 60000 },
+  //   { month: "Sep", revenue: 70000},
+  //   { month: "Oct", revenue: 65000 },
+  //   { month: "Nov", revenue: 72000},
+  //   { month: "Dec", revenue: 95000},
+  // ];
+// Month names list
+const monthNames = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+];
+
+// Get current month index (0–11)
+const currentMonthIndex = new Date().getMonth();
 
   const fetchDashboardData = async () => {
     try {
@@ -80,13 +92,15 @@ const DashboardContent: React.FC = () => {
     try {
       const response = await api.get(`/get-dashboard-graph`);
       if (response.status === 200) {
-        console.log(response.data);
+        // console.log(response.data);
+        setData(response.data);
       }
     } catch (error) {
       console.error("API fetch error:", error);
     }
   };
 
+  console.log(data);
   useEffect(() => {
     fetchDashboardData();
     fetchGraph();
@@ -189,40 +203,40 @@ const DashboardContent: React.FC = () => {
   ];
 
   // Sliding window for 6 months
-  const windowSize = 6;
-  const [windowStart, setWindowStart] = useState(0); // index of first visible month
-  const [activeIndex, setActiveIndex] = useState(5); // Default June (index in data)
-  const current = data[activeIndex];
+  // const windowSize = 6;
+  // const [windowStart, setWindowStart] = useState(0); // index of first visible month
+  // const [activeIndex, setActiveIndex] = useState(5); // Default June (index in data)
+  // const current = data[activeIndex];
 
-  // Move window and activeIndex when navigating
-  const handleNext = () => {
-    // If at end of window, shift window right
-    if (
-      activeIndex === windowStart + windowSize - 1 &&
-      windowStart + windowSize < data.length
-    ) {
-      setWindowStart(windowStart + 1);
-      setActiveIndex(activeIndex + 1);
-    } else if (activeIndex < data.length - 1) {
-      setActiveIndex(activeIndex + 1);
-    }
-  };
+  // // Move window and activeIndex when navigating
+  // const handleNext = () => {
+  //   // If at end of window, shift window right
+  //   if (
+  //     activeIndex === windowStart + windowSize - 1 &&
+  //     windowStart + windowSize < data.length
+  //   ) {
+  //     setWindowStart(windowStart + 1);
+  //     setActiveIndex(activeIndex + 1);
+  //   } else if (activeIndex < data.length - 1) {
+  //     setActiveIndex(activeIndex + 1);
+  //   }
+  // };
 
-  const handlePrev = () => {
-    // If at start of window, shift window left
-    if (activeIndex === windowStart && windowStart > 0) {
-      setWindowStart(windowStart - 1);
-      setActiveIndex(activeIndex - 1);
-    } else if (activeIndex > 0) {
-      setActiveIndex(activeIndex - 1);
-    }
-  };
+  // const handlePrev = () => {
+  //   // If at start of window, shift window left
+  //   if (activeIndex === windowStart && windowStart > 0) {
+  //     setWindowStart(windowStart - 1);
+  //     setActiveIndex(activeIndex - 1);
+  //   } else if (activeIndex > 0) {
+  //     setActiveIndex(activeIndex - 1);
+  //   }
+  // };
 
-  // Only show 6 months in the chart window
-  const chartData = data.slice(windowStart, windowStart + windowSize);
+  // // Only show 6 months in the chart window
+  // const chartData = data.slice(windowStart, windowStart + windowSize);
 
-  // Filter members by current.month
-  const filteredMembers = members.filter((m) => m.month === current.month);
+  // // Filter members by current.month
+  const filteredMembers = members.filter((m) => m.month === data.month);
 
   return (
     <div className="bg-white min-h-screen max-md:p-0">
@@ -255,12 +269,12 @@ const DashboardContent: React.FC = () => {
                 </div>
                 <p className="text-lg font-medium">Revenue</p>
               </div>
-              <button
+              {/* <button
                 onClick={handlePrev}
                 className="text-white text-lg hover:text-gray-300 transition"
               >
-                <IoIosArrowUp />
-              </button>
+
+              </button> */}
             </div>
 
             <div className="flex items-center justify-between mb-4">
@@ -270,12 +284,12 @@ const DashboardContent: React.FC = () => {
                 </h2>
                 <div
                   className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
-                    current.change < 0 ? "bg-red-500" : "bg-green-500"
+                    !dashboardData?.isProfitRevenue ? "bg-red-500" : "bg-green-500"
                   }`}
                   style={{
-                    backgroundColor: current.change < 0 ? "#ef4444" : "#22c55e",
+                    backgroundColor: !dashboardData?.isProfitRevenue ? "#ef4444" : "#22c55e",
                     boxShadow:
-                      current.change < 0
+                      !dashboardData?.isProfitRevenue
                         ? "0 0 20px rgba(239, 68, 68, 0.4)"
                         : "0 0 20px rgba(34, 197, 94, 0.4)",
                     color: "white",
@@ -290,18 +304,19 @@ const DashboardContent: React.FC = () => {
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xl font-semibold">{current.month}</div>
-              </div>
+  <div className="text-xl font-semibold">
+    {monthNames[currentMonthIndex]}
+  </div>
+</div>
+
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-gray-400 text-sm">Month/Jul</span>
-              <button
+              {/* <button
                 onClick={handleNext}
                 className="text-white text-lg hover:text-gray-300 transition"
               >
-                <IoIosArrowDown />
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -335,13 +350,12 @@ const DashboardContent: React.FC = () => {
               </div>
               <div
                 className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium ${
-                  current.change < 0 ? "bg-red-500" : "bg-green-500"
+                  !dashboardData?.isProfitCandidate ? "bg-red-500" : "bg-green-500"
                 }`}
                 style={{
-                  backgroundColor: current.change < 0 ? "#ef4444" : "#22c55e",
+                  backgroundColor: !dashboardData?.isProfitCandidate  ? "#ef4444" : "#22c55e",
                   boxShadow:
-                    current.change < 0
-                      ? "0 0 20px rgba(239, 68, 68, 0.4)"
+                    !dashboardData?.isProfitCandidate ? "0 0 20px rgba(239, 68, 68, 0.4)"
                       : "0 0 20px rgba(34, 197, 94, 0.4)",
                   color: "white",
                 }}
@@ -390,9 +404,11 @@ const DashboardContent: React.FC = () => {
                     axisLine={false}
                     tickLine={false}
                     interval={0}
-                    tick={{ fontSize: 12, textAnchor: "end" }}
+                    scale="point"
+                    padding={{ left: 10, right: 10 }}
+                    tick={{ fontSize: 12, textAnchor: "middle" }}
                   />
-                  <YAxis hide />
+                  {/* <YAxis /> */}
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#111",
@@ -403,14 +419,14 @@ const DashboardContent: React.FC = () => {
                   />
                   <Area
                     type="linear"
-                    dataKey="revenue"
+                    dataKey="total_amount"
                     stroke="#22c55e"
                     fill="url(#colorRevenue)"
                     strokeWidth={2}
                   />
                   <ReferenceDot
-                    x={current.month}
-                    y={current.revenue}
+                    x={data.month}
+                    y={data.total_amount}
                     r={6}
                     fill="#22c55e"
                     stroke="#fff"
@@ -494,7 +510,7 @@ const DashboardContent: React.FC = () => {
                     colSpan={8}
                     className="text-center py-8 text-gray-500 text-sm"
                   >
-                    No members found for {current.month}.
+                    No members found for {data.month}.
                   </td>
                 </tr>
               )}

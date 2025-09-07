@@ -68,12 +68,9 @@ const Header: React.FC = () => {
 
       {/* Profile Section */}
       <div className="ml-auto flex items-center gap-3 max-[500px]:hidden">
-        {/* First letter "A" in a circle */}
         <div className="w-[50px] h-[50px] rounded-full bg-white flex justify-center items-center text-black font-bold text-xl">
           A
         </div>
-
-        {/* Always show "Admin" */}
         <div>
           <p className="font-inter font-semibold text-lg">Admin</p>
         </div>

@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     location.pathname.startsWith("/user-overview");
 
   const linkClass = ({ isActive }: { isActive: boolean }, isLogout = false) =>
-    `flex items-center gap-3 px-4 py-3 rounded-lg text-[16px] font-medium transition-colors
+    `flex items-center gap-3 px-4 py-3 text-[16px] font-medium transition-colors
     ${
       isLogout
         ? "text-red-500 hover:bg-gray-800"

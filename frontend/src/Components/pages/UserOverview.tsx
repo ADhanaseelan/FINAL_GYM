@@ -159,7 +159,7 @@ const UserOverview: React.FC = () => {
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-lg">Progress</h4>
             <button
-              className="flex items-center text-blue-500"
+              className="font-semibold text-[14px] flex items-center text-blue-500 hover:underline"
               onClick={() => navigate(`/progress/${id}`)}
             >
               View More <GrNext />

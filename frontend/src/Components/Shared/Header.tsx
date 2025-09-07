@@ -20,8 +20,9 @@ const Header: React.FC = () => {
     "/progress": "Progress",
     "/diet-chart": "Diet Chart",
     "/logout": "Log Out",
-    "/user-overview": "Candidate Information",
-    "/membership-details": "Membership Details",
+    "/user-overview": "Candidate Information", // dynamic handled
+    "/membership-update": "Update Membership", // dynamic handled
+    "/membership-details": "Add Membership", // dynamic handled
   };
 
   // Sidebar main routes
@@ -34,10 +35,27 @@ const Header: React.FC = () => {
   ];
 
   const currentPath = location.pathname;
-  const matchedRoute = Object.keys(routeTitles).find((route) =>
-    currentPath.startsWith(route)
+
+  // Match exact routes first
+  let matchedRoute = Object.keys(routeTitles).find(
+    (route) => currentPath === route
   );
-  const pageTitle = matchedRoute ? routeTitles[matchedRoute] : "Page";
+
+  // Handle dynamic routes
+  if (!matchedRoute) {
+    if (currentPath.startsWith("/membership-update")) {
+      matchedRoute = "/membership-update";
+    } else if (currentPath.startsWith("/membership-details")) {
+      matchedRoute = "/membership-details";
+    } else if (currentPath.startsWith("/user-overview")) {
+      matchedRoute = "/user-overview";
+    }
+  }
+
+  const pageTitle =
+    matchedRoute && routeTitles[matchedRoute]
+      ? routeTitles[matchedRoute]
+      : "Page";
 
   const showBackButton = !sidebarMainRoutes.includes(matchedRoute || "");
 

@@ -1,4 +1,8 @@
+// Packages
 import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+
+// Icons
 import { FiUsers } from "react-icons/fi";
 import {
   HiOutlineArrowTrendingUp,
@@ -6,6 +10,8 @@ import {
   HiOutlineArrowUpRight,
 } from "react-icons/hi2";
 import { AiOutlineBarChart } from "react-icons/ai";
+
+// Charts
 import {
   AreaChart,
   Area,
@@ -14,9 +20,11 @@ import {
   ResponsiveContainer,
   ReferenceDot,
 } from "recharts";
-import { motion } from "framer-motion";
+
+// Api
 import { api } from "../../services/api";
 
+// Interfaces
 interface Member {
   userId: string;
   candidateName: string;
@@ -44,12 +52,27 @@ interface DashboardGraph {
   total_amount: number;
 }
 
+// Function
 const DashboardContent: React.FC = () => {
   const [dashboardData, setDashboardData] =
     useState<DashboardAPIResponse | null>(null);
   const [data, setData] = useState<DashboardGraph[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState<boolean>(true);
+
+  const [showGoTop, setShowGoTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowGoTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const monthNames = [
     "Jan",
@@ -68,7 +91,6 @@ const DashboardContent: React.FC = () => {
 
   const currentMonthIndex = new Date().getMonth();
 
-  // ✅ Format date as DD MMM YYYY
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -79,20 +101,24 @@ const DashboardContent: React.FC = () => {
     });
   };
 
-  // ✅ Fetch dashboard data
+  // Dashboard Datas functions
   const fetchDashboardData = async () => {
     try {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+
       const response = await api.post("/get-dashboard", {
-        year: 2025,
-        month: 9,
+        year,
+        month,
       });
+
       setDashboardData(response.data);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     }
   };
 
-  // ✅ Fetch revenue graph data
   const fetchGraph = async () => {
     try {
       const response = await api.get(`/get-dashboard-graph`);
@@ -104,7 +130,6 @@ const DashboardContent: React.FC = () => {
     }
   };
 
-  // ✅ Fetch membership expiry list
   const fetchExpiringMembers = async () => {
     try {
       setLoadingMembers(true);
@@ -154,7 +179,9 @@ const DashboardContent: React.FC = () => {
                 <div className="text-white text-xl">
                   <AiOutlineBarChart />
                 </div>
-                <p className="text-lg font-medium">Revenue</p>
+                <p className="font-inter font-semibold text-[16px] leading-[22px] tracking-[0]">
+                  Revenue
+                </p>
               </div>
             </div>
 
@@ -187,11 +214,10 @@ const DashboardContent: React.FC = () => {
                   {dashboardData?.profitRevenue}%
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-xl font-semibold">
-                  {monthNames[currentMonthIndex]}
-                </div>
-              </div>
+            </div>
+
+            <div className="absolute text-[#9CA3AF] font-semibold text-[14px] leading-[22px] tracking-[0] text-center rounded-md shadow-md">
+              Month/{monthNames[currentMonthIndex]}
             </div>
           </div>
 
@@ -211,7 +237,9 @@ const DashboardContent: React.FC = () => {
               <div className="text-white text-xl">
                 <FiUsers />
               </div>
-              <p className="text-lg font-medium">Members</p>
+              <p className="font-inter font-semibold text-[16px] leading-[22px] tracking-[0]">
+                Members
+              </p>
             </div>
 
             <div className="flex items-center gap-4 mb-4">
@@ -253,7 +281,7 @@ const DashboardContent: React.FC = () => {
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
         >
-          <h3 className="text-white text-xl font-extrabold mb-4">
+          <h3 className="font-bold text-[20px] leading-[28px] tracking-[0] text-white mb-4">
             Revenue Analysis
           </h3>
 
@@ -316,91 +344,102 @@ const DashboardContent: React.FC = () => {
       {/* Membership Table */}
       <div className="bg-white overflow-hidden">
         <div className="px-0 py-0">
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-6">
+          <h3 className="font-semibold mb-6 text-[20px] leading-[22px] tracking-[0]">
             Membership Expire Soon
           </h3>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-black" style={{ borderRadius: "10px" }}>
-              <tr>
-                {[
-                  "User Id",
-                  "Name",
-                  "Mobile No",
-                  "Joining Date",
-                  "Blood Group",
-                  "Premium Type",
-                  "Expire In",
-                ].map((head, i) => (
-                  <th
-                    key={i}
-                    className={`py-4 px-6 text-left text-sm font-medium text-white ${
-                      i === 0 ? "rounded-l-[10px]" : ""
-                    }`}
-                  >
-                    {head}
-                  </th>
-                ))}
-                <th className="py-4 px-6 text-left text-sm font-medium text-white w-16 rounded-r-[10px]"></th>
-              </tr>
-            </thead>
-            <tbody className="bg-white">
-              {loadingMembers ? (
+        <div className="bg-white overflow-x-auto">
+          <div className="min-w-[800px]">
+            <table className="w-full table-auto">
+              <thead className="bg-black">
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center py-8 text-gray-500 text-sm"
-                  >
-                    Loading members...
-                  </td>
+                  {[
+                    "User Id",
+                    "Name",
+                    "Mobile No",
+                    "Joining Date",
+                    "Blood Group",
+                    "Premium Type",
+                    "Expire In",
+                  ].map((head, i) => (
+                    <th
+                      key={i}
+                      className={`py-4 px-6 text-left text-sm font-medium text-white ${
+                        i === 0 ? "rounded-l-[10px]" : ""
+                      }`}
+                    >
+                      {head}
+                    </th>
+                  ))}
+                  <th className="py-4 px-6 text-left text-sm font-medium text-white w-16 rounded-r-[10px]"></th>
                 </tr>
-              ) : members.length > 0 ? (
-                members.map((m, idx) => (
-                  <tr
-                    key={idx}
-                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.userId}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.candidateName}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.phoneNumber}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-900">
-                      {formatDate(m.joiningDate)}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.bloodGroup}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.premiumType} Months
-                    </td>
-                    <td className="py-4 px-6 text-sm text-gray-900">
-                      {m.expireIn} days
-                    </td>
-                    <td className="py-4 px-6 text-gray-400 hover:text-gray-600 transition-colors">
-                      <HiOutlineArrowUpRight />
+              </thead>
+              <tbody className="bg-white">
+                {loadingMembers ? (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="text-center py-8 text-gray-500 text-sm"
+                    >
+                      Loading members...
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="text-center py-8 text-gray-500 text-sm"
-                  >
-                    No members expiring soon.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                ) : members.length > 0 ? (
+                  members.map((m, idx) => (
+                    <tr
+                      key={idx}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {m.userId}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {m.candidateName}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {m.phoneNumber}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {formatDate(m.joiningDate)}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {m.bloodGroup}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {m.premiumType} Months
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {m.expireIn} days
+                      </td>
+                      <td className="py-4 px-6 text-gray-400 hover:text-gray-600 transition-colors">
+                        <HiOutlineArrowUpRight />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="text-center py-8 text-gray-500 text-sm"
+                    >
+                      No members expiring soon.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
+      {showGoTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 bg-black text-white p-3 rounded-full shadow-lg hover:bg-gray-800 transition-colors z-50"
+          title="Go to top"
+        >
+          ↑
+        </button>
+      )}
     </div>
   );
 };

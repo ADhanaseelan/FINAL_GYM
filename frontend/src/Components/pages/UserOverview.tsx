@@ -22,11 +22,11 @@ const formatDate = (dateStr: string) => {
   return `${day} ${month} ${year}`;
 };
 
+// Function
 const UserOverview: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
-  const [originalUser, setOriginalUser] = useState<any>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -37,7 +37,6 @@ const UserOverview: React.FC = () => {
         const userData = { ...response.data, password: "********" };
         console.log("Fetched User Data:", response.data);
         setUser(userData);
-        setOriginalUser(userData);
       } catch (error) {
         console.error("Error fetching user info:", error);
       }
@@ -46,69 +45,8 @@ const UserOverview: React.FC = () => {
     fetchUser();
   }, [id]);
 
-  const isEdited = () => {
-    if (!originalUser || !user) return false;
-
-    const fieldsToCheck = [
-      "candidate_name",
-      "phone_number",
-      "blood_group",
-      "height",
-      "weight",
-      "gender",
-      "instructor",
-      "candidate_type",
-      "goal",
-      "address",
-      "dietPlan",
-      "workoutPlan",
-      "username",
-      "password",
-      "email",
-    ];
-
-    for (let field of fieldsToCheck) {
-      if ((user[field] || "") !== (originalUser[field] || "")) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
   const handleClick = () => {
     navigate(`/membership-update/${id}`);
-  };
-
-  const handleSave = async () => {
-    try {
-      const payload = {
-        userId: user.user_id,
-        candidate_name: user.candidate_name,
-        phone_number: user.phone_number,
-        blood_group: user.blood_group,
-        height: user.height,
-        weight: user.weight,
-        gender: user.gender,
-        instructor: user.instructor,
-        candidate_type: user.candidate_type,
-        goal: user.goal,
-        address: user.address,
-        email: user.email,
-        username: user.username,
-        password: user.password !== "********" ? user.password : undefined,
-        dietPlan: user.dietPlan,
-        workoutPlan: user.workoutPlan,
-      };
-
-      await api.post("/update-details", payload);
-
-      setOriginalUser({ ...user });
-      alert("Changes saved successfully!");
-    } catch (error) {
-      console.error("Error saving user info:", error);
-      alert("Failed to save changes.");
-    }
   };
 
   if (!user) return <div>Loading...</div>;
@@ -131,7 +69,9 @@ const UserOverview: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-xl font-semibold">{user.candidate_name}</h3>
+              <h3 className="font-bold text-[32px] leading-[48px] tracking-normal">
+                {user.candidate_name}
+              </h3>
               <p className="text-sm text-gray-700">User id: {user.user_id}</p>
             </div>
           </div>
@@ -149,7 +89,7 @@ const UserOverview: React.FC = () => {
               Membership Details
             </h4>
             <button
-              className="flex items-center text-blue-500"
+              className="font-semibold text-[14px] flex items-center text-blue-500 hover:underline"
               onClick={handleClick}
             >
               View More <GrNext />
@@ -158,27 +98,37 @@ const UserOverview: React.FC = () => {
           <div className="space-y-4">
             <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
               <div className="flex justify-between">
-                <p className="text-sm font-medium">Membership</p>
+                <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+                  Membership
+                </p>
               </div>
-              <h3 className="font-bold text-lg">
+              <h3 className="font-bold text-2xl leading-8 tracking-normal">
                 {user.duration || "N/A"} Months
               </h3>
             </div>
             <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-              <p className="text-sm text-gray-500">Membership Amount</p>
-              <h3 className="font-bold text-lg">
+              <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+                Membership Amount
+              </p>
+              <h3 className="font-bold text-2xl leading-8 tracking-normal">
                 {user.amount ? `₹${user.amount}` : "N/A"}
               </h3>
             </div>
             <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-              <p className="text-sm text-gray-500">Start Date</p>
-              <h3 className="font-bold text-lg">
+              <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+                Start Date
+              </p>
+              <h3 className="font-bold text-2xl leading-8 tracking-normal">
                 {formatDate(user.start_date)}
               </h3>
             </div>
             <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-              <p className="text-sm text-gray-500">End Date</p>
-              <h3 className="font-bold text-lg">{formatDate(user.end_date)}</h3>
+              <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+                End Date
+              </p>
+              <h3 className="font-bold text-2xl leading-8 tracking-normal">
+                {formatDate(user.end_date)}
+              </h3>
             </div>
           </div>
         </div>
@@ -209,18 +159,18 @@ const UserOverview: React.FC = () => {
           <div className="flex items-center justify-between">
             <h4 className="font-semibold text-lg">Progress</h4>
             <button
-              className="flex items-center text-blue-500"
+              className="font-semibold text-[14px] flex items-center text-blue-500 hover:underline"
               onClick={() => navigate(`/progress/${id}`)}
             >
               View More <GrNext />
             </button>
           </div>
           <div className="mt-3 space-y-2">
-            <p className="text-xl">
+            <p className="font-normal text-[16px] leading-[22px] tracking-[0%]">
               Latest Weight:{" "}
               <span>{latestWeight ? `${latestWeight} kg` : "N/A"}</span>
             </p>
-            <p className="text-xl">
+            <p className="font-normal text-[16px] leading-[22px] tracking-[0%]">
               Previous Weight:{" "}
               <span>{previousWeight ? `${previousWeight} kg` : "N/A"}</span>
             </p>
@@ -230,18 +180,6 @@ const UserOverview: React.FC = () => {
         {/* Personal & Login Details */}
         <PersonalDetails user={user} />
         <LoginDetails user={user} />
-
-        {/* Save Changes Button */}
-        {isEdited() && (
-          <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleSave}
-              className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600"
-            >
-              Save Changes
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

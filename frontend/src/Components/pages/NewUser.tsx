@@ -4,6 +4,8 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
+
+// Css
 import "react-toastify/dist/ReactToastify.css";
 
 // Components
@@ -28,7 +30,7 @@ type FormData = {
   candidateType: string;
   instructor: string;
   goal: string;
-  premiumType: string; // in months
+  premiumType: string;
   height: number;
   weight: number;
   address: string;
@@ -153,13 +155,16 @@ const NewUser: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             {/* Candidate Name */}
             <LabelInput
+              id="candidateName"
               label="Candidate Name *"
               placeholder="Enter full name"
               {...register("candidateName", { required: "Name is required" })}
               error={errors.candidateName?.message}
             />
 
+            {/* User ID */}
             <LabelInput
+              id="userId"
               label="User ID *"
               value={userId}
               {...register("userId")}
@@ -168,16 +173,26 @@ const NewUser: React.FC = () => {
 
             {/* Date of Birth */}
             <LabelInput
+              id="dateOfBirth"
               label="Date Of Birth *"
               type="date"
               {...register("dateOfBirth", {
                 required: "Date of Birth is required",
+                validate: (value) => {
+                  const selectedDate = new Date(value);
+                  const todayDate = new Date();
+                  if (selectedDate >= todayDate) {
+                    return "Date of Birth cannot be today or in the future";
+                  }
+                  return true;
+                },
               })}
               error={errors.dateOfBirth?.message}
             />
 
             {/* Phone Number */}
             <LabelInput
+              id="phoneNumber"
               label="Phone Number *"
               type="tel"
               maxLength={10}
@@ -194,6 +209,7 @@ const NewUser: React.FC = () => {
 
             {/* Address */}
             <LabelInput
+              id="address"
               label="Address *"
               placeholder="Enter Address"
               {...register("address", { required: "Address is required" })}
@@ -329,6 +345,7 @@ const NewUser: React.FC = () => {
 
             {/* Date of Joining */}
             <LabelInput
+              id="dateOfJoining"
               label="Date of Joining *"
               type="date"
               defaultValue={today}
@@ -340,30 +357,37 @@ const NewUser: React.FC = () => {
 
             {/* Height */}
             <LabelInput
+              id="height"
               label="Height *"
               type="number"
-              placeholder="Enter height"
+              step="0.1"
+              placeholder="Enter height in cm"
               {...register("height", {
                 required: "Height is required",
                 valueAsNumber: true,
+                min: { value: 0, message: "Height must be positive" },
               })}
               error={errors.height?.message}
             />
 
             {/* Weight */}
             <LabelInput
+              id="weight"
               label="Weight *"
               type="number"
-              placeholder="Enter weight"
+              step="0.1"
+              placeholder="Enter weight in kg"
               {...register("weight", {
                 required: "Weight is required",
                 valueAsNumber: true,
+                min: { value: 0, message: "Weight must be positive" },
               })}
               error={errors.weight?.message}
             />
 
             {/* Username */}
             <LabelInput
+              id="userName"
               label="User Name *"
               placeholder="Enter username"
               {...register("userName", { required: "Username is required" })}
@@ -373,10 +397,10 @@ const NewUser: React.FC = () => {
             {/* Password */}
             <div className="relative">
               <LabelInput
+                id="password"
                 label="Password *"
                 type={showPassword ? "text" : "password"}
-                placeholder="The password must contain 8 Characters*"
-                className="pr-12"
+                placeholder="Enter Password"
                 {...register("password", {
                   required: "Password is required",
                   minLength: {
@@ -403,8 +427,8 @@ const NewUser: React.FC = () => {
           {/* Buttons */}
           <div className="flex justify-end gap-4 mt-6">
             <NegativeButton
-              label="Reset"
-              onClick={() => reset({ dateOfJoining: today, userId })}
+              label="Cancel"
+              onClick={() => window.location.reload()}
               disabled={loading}
             />
             <PositiveButton

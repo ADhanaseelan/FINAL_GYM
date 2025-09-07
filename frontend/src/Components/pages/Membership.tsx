@@ -52,10 +52,8 @@ const Membership = () => {
   const name = watch("name");
   const duration = watch("duration");
   const startDate = watch("startDate");
-  // const amount = watch("amount");
   const paymentType = watch("paymentType");
 
-  // ✅ Auto-calculate end date based on start date + duration
   useEffect(() => {
     if (!duration) return;
 
@@ -67,17 +65,14 @@ const Membership = () => {
     setValue("endDate", formattedEndDate);
   }, [duration, startDate, setValue]);
 
-  // ✅ Fetch latest membership + history
   useEffect(() => {
     const fetchMembership = async () => {
       try {
         const response = await api.get(`/get-old-membership/${userId}`);
         const data = response.data;
 
-        // ✅ Set candidate name
         setValue("name", data.candidateName || "");
 
-        // ✅ Save latest membership separately
         if (data.latestMembership) {
           setLatestMembership(data.latestMembership);
 
@@ -102,7 +97,7 @@ const Membership = () => {
 
         setMembershipHistory(data.membershipHistory || []);
       } catch (error) {
-        console.error("❌ Error fetching membership:", error);
+        console.error("Error fetching membership:", error);
       }
     };
 
@@ -125,13 +120,13 @@ const Membership = () => {
     navigate(-2);
   };
 
-  // ✅ Validate all required fields before submit
   const validateForm = (data: MembershipForm) => {
     if (!data.name.trim()) return "Name is required";
     if (!data.amount.trim()) return "Amount is required";
     if (!data.duration) return "Duration is required";
     if (!data.startDate) return "Start Date is required";
     if (!data.endDate) return "End Date is required";
+    if (!data.paymentType.trim()) return "Payment Type is required"; // <-- added check
     return null;
   };
 
@@ -145,7 +140,7 @@ const Membership = () => {
     try {
       const payload = {
         ...data,
-        memberName: data.name, // send as memberName for backend
+        memberName: data.name,
       };
 
       await api.put(`/upgrade-premium`, payload);
@@ -162,7 +157,7 @@ const Membership = () => {
       setLatestMembership(response.data.latestMembership);
       setMembershipHistory(response.data.membershipHistory || []);
     } catch (error) {
-      console.error("❌ Error saving membership:", error);
+      console.error("Error saving membership:", error);
     }
   };
 
@@ -178,48 +173,51 @@ const Membership = () => {
               .join("")}
           </div>
           <div>
-            <h3 className="text-xl font-semibold">{name}</h3>
-            <p className="text-sm text-gray-700">ID: {userId || "001"}</p>
-            <p className="text-xs text-gray-400">
-              Since{" "}
-              {latestMembership?.startDate && latestMembership.startDate !== "0"
-                ? latestMembership.startDate
-                : "N/A"}
+            <h3 className="ont-bold text-[32px] leading-[48px] tracking-normal">
+              {name}
+            </h3>
+            <p className="ont-semibold text-[18px] leading-[27px] tracking-normal">
+              ID: {userId || "001"}
             </p>
           </div>
         </div>
-        <span className="bg-gray-200 text-gray-700 px-3 py-2 rounded-xl text-sm font-medium">
-          Active
-        </span>
       </div>
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow text-center">
-          <p className="text-sm text-gray-500">Membership</p>
-          <span className="text-lg font-bold">
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col justify-center items-start">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            Membership
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
             {latestMembership?.durationMonths
               ? `${latestMembership.durationMonths} Months`
               : "Not Available"}
           </span>
         </div>
         <div className="bg-white p-4 rounded-lg shadow text-center">
-          <p className="text-sm text-gray-500">Membership Amount</p>
-          <span className="text-lg font-bold">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            Membership Amount
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
             {latestMembership?.amount || "0"}
           </span>
         </div>
         <div className="bg-white p-4 rounded-lg shadow text-center">
-          <p className="text-sm text-gray-500">Start Date</p>
-          <span className="text-lg font-bold">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            Start Date
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
             {latestMembership?.startDate && latestMembership.startDate !== "0"
               ? latestMembership.startDate
               : "N/A"}
           </span>
         </div>
         <div className="bg-white p-4 rounded-lg shadow text-center">
-          <p className="text-sm text-gray-500">End Date</p>
-          <span className="text-lg font-bold">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            End Date
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
             {latestMembership?.endDate && latestMembership.endDate !== "0"
               ? latestMembership.endDate
               : "N/A"}

@@ -1,15 +1,12 @@
 // Packages
 import { useRef, useEffect } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { GiNetworkBars } from "react-icons/gi";
-import { FiUsers,FiHome} from "react-icons/fi";
-import { FaPlus } from "react-icons/fa6";
 
 // Icons
-import {
-  MdOutlineLogout,
-  MdFitnessCenter,
-} from "react-icons/md";
+import { MdOutlineLogout, MdFitnessCenter } from "react-icons/md";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { GiNetworkBars } from "react-icons/gi";
+import { FiUsers, FiHome } from "react-icons/fi";
+import { FaPlus } from "react-icons/fa6";
 
 // Authenticate
 import { useAuthStore } from "../../store/authStore";
@@ -20,6 +17,7 @@ interface SidebarProps {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+// Function
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
@@ -32,12 +30,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     location.pathname.startsWith("/user-overview");
 
   const linkClass = ({ isActive }: { isActive: boolean }, isLogout = false) =>
-    `flex items-center gap-3 px-4 py-3 rounded-lg text-[16px] font-medium transition-colors
+    `flex items-center gap-3 px-4 py-3 text-[16px] font-medium transition-colors
     ${
       isLogout
         ? "text-red-500 hover:bg-gray-800"
         : isActive
-        ? "bg-teal-400 text-black "
+        ? "bg-teal-400 text-black"
         : "text-white hover:bg-gray-800"
     }`;
 
@@ -47,9 +45,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     }
   };
 
+  // Logout on click
   const handleLogout = async () => {
     try {
-      await logout(); // clear token/cookie in your auth store
+      await logout();
     } catch (err) {
       console.error("Error during logout:", err);
     } finally {
@@ -84,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         <div className="w-10 h-10 bg-white rounded-lg" />
         {isOpen && (
           <div>
-            <p className="text-white font-semibold text-lg">Name</p>
+            <p className="text-white font-semibold text-lg">STAR</p>
           </div>
         )}
       </div>
@@ -96,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           className={linkClass}
           onClick={handleLinkClick}
         >
-          <FiHome  className="w-5 h-5" /> {isOpen && "Dashboard"}
+          <FiHome className="w-5 h-5" /> {isOpen && "Dashboard"}
         </NavLink>
 
         <NavLink
@@ -117,7 +116,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           <FiUsers className="w-5 h-5" /> {isOpen && "Member List"}
         </NavLink>
 
-        <NavLink to="/Addprogress" className={linkClass} onClick={handleLinkClick}>
+        <NavLink
+          to="/Addprogress"
+          className={linkClass}
+          onClick={handleLinkClick}
+        >
           <MdFitnessCenter className="w-5 h-5" /> {isOpen && "Add Progress"}
         </NavLink>
 
@@ -137,10 +140,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
 
       {/* Mobile-only Profile Info */}
       <div className="mt-auto hidden items-center gap-3 max-[500px]:flex p-4">
-        <div className="w-[50px] h-[50px] rounded-full bg-white" />
+        <div className="w-[50px] h-[50px] rounded-full bg-white flex justify-center items-center text-black font-bold text-xl">
+          A
+        </div>
         <div>
           <p className="font-inter font-semibold text-lg">Admin</p>
-          <p className="font-inter text-sm">User Name</p>
         </div>
       </div>
     </aside>

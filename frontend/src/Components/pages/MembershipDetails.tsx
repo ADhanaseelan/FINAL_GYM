@@ -81,9 +81,8 @@ const MembershipDetails = () => {
           type="success"
         />
       );
-      navigate("/new-members");
+      navigate("/new-member");
     } catch (error) {
-      console.error("Error removing candidate:", error);
       toast(
         <ToastMessage
           title="Error"
@@ -95,6 +94,16 @@ const MembershipDetails = () => {
   };
 
   const onSubmit = async (data: MembershipForm) => {
+    if (!data.paymentType || data.paymentType.trim() === "") {
+      toast(
+        <ToastMessage
+          title="Error"
+          description="Payment Type is required"
+          type="error"
+        />
+      );
+      return;
+    }
     try {
       const payload = {
         userId: data.userId,
@@ -108,18 +117,17 @@ const MembershipDetails = () => {
 
       const response = await api.post("/register-membership", payload);
 
-      toast(
-        <ToastMessage
-          title="Success"
-          description="Membership registered successfully."
-          type="success"
-        />
-      );
+      if (response.status == 200)
+        toast(
+          <ToastMessage
+            title="Success"
+            description="Membership registered successfully."
+            type="success"
+          />
+        );
 
-      console.log("API response:", response.data);
-      navigate("/dashboard");
+      navigate("/member-list");
     } catch (error) {
-      console.error("Error registering membership:", error);
       toast(
         <ToastMessage
           title="Error"
@@ -142,10 +150,14 @@ const MembershipDetails = () => {
               .join("")}
           </div>
           <div>
-            <h3 className="text-xl font-semibold">{initialData?.name}</h3>
-            <p className="text-sm text-gray-700">ID: {userId || "001"}</p>
-            <p className="text-xs text-gray-400">
-              Since {formatDate(startDate)}
+            <h3 className="font-bold text-[32px] leading-[48px] tracking-normal">
+              {initialData?.name}
+            </h3>
+            <p className="font-semibold text-[18px] leading-[27px] tracking-normal">
+              ID: {userId || "001"}
+            </p>
+            <p className="font-normal text-[#667085] text-[14px] leading-[20px] tracking-normal">
+              Date Entered: {formatDate(startDate)}
             </p>
           </div>
         </div>
@@ -153,21 +165,37 @@ const MembershipDetails = () => {
 
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow text-center flex flex-col justify-center">
-          <p className="text-sm text-gray-500">Membership</p>
-          <span className="text-lg font-bold">{duration} Months</span>
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col justify-center items-start">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            Membership
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
+            {duration} Months
+          </span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow text-center flex flex-col justify-center">
-          <p className="text-sm text-gray-500">Membership Amount</p>
-          <span className="text-lg font-bold">{initialData?.amount || 0}</span>
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col justify-center items-start">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            Membership Amount
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
+            {initialData?.amount || 0}
+          </span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow text-center flex flex-col justify-center">
-          <p className="text-sm text-gray-500">Start Date</p>
-          <span className="text-lg font-bold">{formatDate(startDate)}</span>
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col justify-center items-start">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            Start Date
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
+            {formatDate(startDate)}
+          </span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow text-center flex flex-col justify-center">
-          <p className="text-sm text-gray-500">End Date</p>
-          <span className="text-lg font-bold">{formatDate(endDate)}</span>
+        <div className="bg-white p-4 rounded-lg shadow flex flex-col justify-center items-start">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+            End Date
+          </p>
+          <span className="font-bold text-2xl leading-8 tracking-normal">
+            {formatDate(endDate)}
+          </span>
         </div>
       </div>
 

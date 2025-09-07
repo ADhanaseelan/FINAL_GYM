@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { api } from "../../services/api";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -21,6 +21,8 @@ const ProgressForm: React.FC = () => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [candidateName, setCandidateName] = useState("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [date, setDate] = useState("");
   const [progressData, setProgressData] = useState<ProgressData>({
     weight: "",
@@ -31,6 +33,7 @@ const ProgressForm: React.FC = () => {
     bAge: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Fetch candidates
   useEffect(() => {
@@ -46,12 +49,55 @@ const ProgressForm: React.FC = () => {
     fetchCandidates();
   }, []);
 
-  const handleUserChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const userId = e.target.value;
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filtered & Sorted Candidates
+  const filteredCandidates = candidates
+    .filter((c) => c.user_id.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      const numA = parseInt(a.user_id.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.user_id.replace(/\D/g, ""), 10);
+      return numA - numB;
+    });
+
+  // When user clicks a candidate
+  const handleUserSelect = (userId: string) => {
     setSelectedUserId(userId);
     const candidate = candidates.find((c) => c.user_id === userId);
     setCandidateName(candidate ? candidate.candidate_name : "");
+    setDropdownOpen(false);
+    setSearchTerm(userId);
     setErrors({ ...errors, selectedUserId: "" });
+  };
+
+  // Validate typed input on blur
+  const handleInputBlur = () => {
+    if (!candidates.find((c) => c.user_id === searchTerm)) {
+      setErrors({
+        ...errors,
+        selectedUserId: "Please select a valid User ID from the list.",
+      });
+      setSelectedUserId("");
+      setCandidateName("");
+    } else {
+      const candidate = candidates.find((c) => c.user_id === searchTerm);
+      setSelectedUserId(searchTerm);
+      setCandidateName(candidate ? candidate.candidate_name : "");
+      setErrors({ ...errors, selectedUserId: "" });
+    }
+    setDropdownOpen(false);
   };
 
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,6 +127,8 @@ const ProgressForm: React.FC = () => {
       bAge: "",
     });
     setErrors({});
+    setDropdownOpen(false);
+    setSearchTerm("");
   };
 
   const handleSave = () => {
@@ -136,26 +184,40 @@ const ProgressForm: React.FC = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Top Section */}
       <div>
         <h2 className="text-xl font-bold mb-4">Progress Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          <div>
+          {/* Custom Dropdown */}
+          <div ref={dropdownRef} className="relative">
             <label className="block mb-1 font-medium">User ID *</label>
-            <select
-              value={selectedUserId}
-              onChange={handleUserChange}
+            <input
+              type="text"
+              value={searchTerm}
+              onFocus={() => setDropdownOpen(true)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setDropdownOpen(true);
+                setErrors({ ...errors, selectedUserId: "" });
+              }}
+              onBlur={handleInputBlur}
+              placeholder="Search user..."
               className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500 ${
                 errors.selectedUserId ? "border-red-500" : "border-gray-300"
               }`}
-            >
-              <option value="">Select User</option>
-              {candidates.map((c) => (
-                <option key={c.user_id} value={c.user_id}>
-                  {c.user_id}
-                </option>
-              ))}
-            </select>
+            />
+            {dropdownOpen && filteredCandidates.length > 0 && (
+              <ul className="absolute z-10 w-full bg-white border rounded-md max-h-48 overflow-y-auto mt-1 shadow-lg">
+                {filteredCandidates.map((c) => (
+                  <li
+                    key={c.user_id}
+                    className="px-3 py-2 hover:bg-teal-100 cursor-pointer"
+                    onMouseDown={() => handleUserSelect(c.user_id)}
+                  >
+                    {c.user_id} - {c.candidate_name}
+                  </li>
+                ))}
+              </ul>
+            )}
             {errors.selectedUserId && (
               <p className="text-red-500 text-sm mt-1">
                 {errors.selectedUserId}
@@ -163,6 +225,7 @@ const ProgressForm: React.FC = () => {
             )}
           </div>
 
+          {/* Candidate Name */}
           <div>
             <label className="block mb-1 font-medium">Candidate Name</label>
             <input
@@ -173,6 +236,7 @@ const ProgressForm: React.FC = () => {
             />
           </div>
 
+          {/* Date */}
           <div>
             <label className="block mb-1 font-medium">Date *</label>
             <input
@@ -193,7 +257,7 @@ const ProgressForm: React.FC = () => {
         </div>
       </div>
 
-      {/* Progress Details Box */}
+      {/* Progress Inputs */}
       <div className="border border-gray-300 rounded-lg p-6">
         <h2 className="text-xl font-bold mb-4">Progress Details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

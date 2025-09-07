@@ -9,29 +9,31 @@ import gymBg from "../assets/login-pic.png";
 // Store
 import { useAuthStore } from "../store/authStore";
 
+// Function
 const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
-  const navigate = useNavigate();
+  const [isRemember, setIsRemember] = useState(false);
 
+  const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
 
-  // track screen resize
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // On click function
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, isRemember);
       navigate("/dashboard");
     } catch (err: any) {
       if (err.message === "Network Error") {
@@ -43,8 +45,7 @@ const Login: React.FC = () => {
           position: "top-right",
         });
       } else {
-        console.log(err);
-        toast.error("Something went wrong. Please try again.", {
+        toast.error("Something went wrong. Please try again later.", {
           position: "top-right",
         });
       }
@@ -56,7 +57,6 @@ const Login: React.FC = () => {
   return (
     <>
       <div className="min-h-screen flex">
-        {/* Left Side for medium and above */}
         <div
           className="hidden md:flex flex-1 bg-cover bg-center"
           style={{ backgroundImage: `url(${gymBg})` }}
@@ -78,7 +78,6 @@ const Login: React.FC = () => {
             </p>
 
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Email */}
               <div>
                 <label
                   htmlFor="email"
@@ -92,13 +91,12 @@ const Login: React.FC = () => {
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="Enter your email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => setEmail(e.target.value.toLowerCase())}
                   required
                   disabled={loading}
                 />
               </div>
 
-              {/* Password with Eye Icon */}
               <div>
                 <label
                   htmlFor="password"
@@ -132,14 +130,19 @@ const Login: React.FC = () => {
                 </div>
               </div>
 
-              {/* Forgot Password */}
-              <div className="flex justify-end text-sm">
-                <a href="#" className="text-blue-500 hover:underline">
-                  Forgot password?
-                </a>
+              <div className="flex items-center justify-between text-sm">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isRemember}
+                    onChange={(e) => setIsRemember(e.target.checked)}
+                    disabled={loading}
+                    className="w-4 h-4 accent-blue-600 cursor-pointer"
+                  />
+                  <span className="text-gray-700">Remember Me</span>
+                </label>
               </div>
 
-              {/* Sign in Button */}
               <button
                 type="submit"
                 disabled={loading}

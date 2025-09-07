@@ -4,7 +4,11 @@ import { api } from "../services/api";
 
 interface AuthState {
   isLoggedIn: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    isRembember: boolean
+  ) => Promise<void>;
   checkAuth: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -12,8 +16,8 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: false,
 
-  login: async (email, password) => {
-    await api.post("/login", { email, password });
+  login: async (email, password, isRembember) => {
+    await api.post("/login", { email, password, isRembember });
     set({ isLoggedIn: true });
   },
 

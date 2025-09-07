@@ -1,27 +1,37 @@
+// Packages
 import { useState, useRef, useEffect } from "react";
-import { RiArrowDropDownLine } from "react-icons/ri";
-import { CiSearch } from "react-icons/ci";
 import React from "react";
 
-/* ---------------- LabelInput ---------------- */
+// Icons
+import { RiArrowDropDownLine } from "react-icons/ri";
+import { CiSearch } from "react-icons/ci";
+
+// Interface
 interface LabelInputProps {
   label: string;
   error?: string;
   type?: string;
   placeholder?: string;
   maxLength?: number;
+  id?: string;
 }
 
+// Input
 export const LabelInput: React.FC<
   LabelInputProps & React.InputHTMLAttributes<HTMLInputElement>
-> = ({ label, error, ...inputProps }) => {
+> = ({ label, error, id, name, ...inputProps }) => {
   return (
     <div className="w-full max-w-md mb-4">
-      <label className="block mb-2 font-semibold text-sm text-gray-900">
+      <label
+        htmlFor={id}
+        className="block mb-2 font-semibold text-sm text-gray-900"
+      >
         {label}
       </label>
       <input
         {...inputProps}
+        id={id}
+        name={id}
         className={`w-full h-12 rounded-md border px-3 text-sm focus:border-teal-500 focus:ring focus:ring-teal-200 outline-none ${
           error ? "border-red-500 bg-red-50" : "border-gray-300 bg-white"
         }`}

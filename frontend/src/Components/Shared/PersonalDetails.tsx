@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { api } from "../../services/api"; // make sure your API import is correct
 
 interface User {
+  user_id: string;
   phone_number: string;
   blood_group: string;
   address: string;
@@ -30,12 +32,43 @@ const PersonalDetails: React.FC<{ user: User }> = ({ user }) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleSavePersonal = async () => {
+    try {
+      const personalPayload = {
+        userId: user.user_id,
+        phone_number: formData.mobile,
+        blood_group: formData.blood,
+        height: formData.height,
+        weight: formData.weight,
+        gender: formData.gender,
+        instructor: formData.instructor,
+        candidate_type: formData.candidateType,
+        goal: formData.goal,
+        address: formData.address,
+      };
+
+      await api.put("/update-details", personalPayload);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error saving personal details:", error);
+      alert("Failed to save personal details.");
+    }
+  };
+
+  const handleEditSaveClick = () => {
+    if (isEditing) {
+      handleSavePersonal();
+    } else {
+      setIsEditing(true);
+    }
+  };
+
   return (
     <div className="bg-white shadow rounded-lg border border-[#E6E6E6] p-4 mt-4 mb-4">
       <div className="flex justify-between items-center mb-4">
         <h4 className="font-semibold">Personal Details</h4>
         <button
-          onClick={() => setIsEditing(!isEditing)}
+          onClick={handleEditSaveClick}
           className="text-sm text-black-600 bg-gray-300 pt-[10px] pb-[10px] px-[14px] rounded-lg hover:underline"
         >
           {isEditing ? "Save" : "Edit"}

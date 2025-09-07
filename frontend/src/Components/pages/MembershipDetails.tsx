@@ -94,6 +94,16 @@ const MembershipDetails = () => {
   };
 
   const onSubmit = async (data: MembershipForm) => {
+    if (!data.paymentType || data.paymentType.trim() === "") {
+      toast(
+        <ToastMessage
+          title="Error"
+          description="Payment Type is required"
+          type="error"
+        />
+      );
+      return;
+    }
     try {
       const payload = {
         userId: data.userId,

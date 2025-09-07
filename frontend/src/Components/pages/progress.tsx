@@ -1,5 +1,7 @@
 // Packages
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 // Icons
 import { FiDownload } from "react-icons/fi";
@@ -144,6 +146,7 @@ const ProgressTracker: React.FC = () => {
     ];
   }, [selectedData]);
 
+  // Animate metrics
   useEffect(() => {
     const prevMetrics = prevMetricsRef.current.length
       ? prevMetricsRef.current
@@ -174,22 +177,32 @@ const ProgressTracker: React.FC = () => {
   }, [metrics]);
 
   const handleExport = () => {
-    const csvContent =
-      "data:text/csv;charset=utf-8," +
-      ["Date,Weight,Fat,V Fat,BMR,BMI,Body Age"]
-        .concat(
-          data.map(
-            (d) =>
-              `${d.date},${d.weight},${d.fat},${d.vfat},${d.bmr},${d.bmi},${d.bodyAge}`
-          )
-        )
-        .join("\n");
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", "progress_data.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (!data.length) return;
+
+    const worksheetData = data.map((d) => ({
+      Date: d.date,
+      Weight: d.weight,
+      Fat: d.fat,
+      "V Fat": d.vfat,
+      BMR: d.bmr,
+      BMI: d.bmi,
+      "Body Age": d.bodyAge,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Progress");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+
+    saveAs(blob, "progress_data.xlsx");
   };
 
   const getColorClass = (status: string) => {
@@ -214,7 +227,7 @@ const ProgressTracker: React.FC = () => {
       } else if (prev.length < 2) {
         return [...prev, date];
       } else {
-        const [first] = prev;
+        const [] = prev;
         return [prev[1], date].sort(
           (a, b) => new Date(a).getTime() - new Date(b).getTime()
         );
@@ -231,6 +244,14 @@ const ProgressTracker: React.FC = () => {
     });
   };
 
+  // NEW: Corrected getBarWidth
+  const getBarWidth = (start: number, end: number) => {
+    const max = Math.max(start, end, 1); // avoid divide by zero
+    const startPercent = (start / max) * 100;
+    const endPercent = (end / max) * 100;
+    return { startPercent, endPercent };
+  };
+
   return (
     <div className="min-h-screen bg-white p-6">
       <div className="w-full max-w-7xl mx-auto">
@@ -239,62 +260,70 @@ const ProgressTracker: React.FC = () => {
           * Select Date manually or tick two rows to compare progress
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {animatedMetrics.map((m, idx) => (
-            <div key={idx} className="bg-white border rounded-xl p-4 shadow-sm">
-              <h3 className="font-semibold text-sm text-gray-800">
-                {m.label}{" "}
-                <span
-                  className={
-                    selectedData.length === 2
-                      ? getColorClass(m.status).split(" ")[0]
-                      : "text-gray-400"
-                  }
-                >
-                  {selectedData.length === 2
-                    ? `${
-                        m.change.startsWith("-") ? "Loss" : "Gain"
-                      }: ${m.change.replace("-", "")}`
-                    : "Gain/Loss: 0"}
-                </span>
-              </h3>
-              <div className="mt-3 space-y-3">
-                <div>
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span>{formatDate(fromDate)}</span>
-                    <span className="font-semibold text-gray-900">
-                      {m.start}
-                    </span>
+          {animatedMetrics.map((m, idx) => {
+            const { startPercent, endPercent } = getBarWidth(m.start, m.end);
+            return (
+              <div
+                key={idx}
+                className="bg-white border rounded-xl p-4 shadow-sm"
+              >
+                <h3 className="font-semibold text-sm text-gray-800">
+                  {m.label}{" "}
+                  <span
+                    className={
+                      selectedData.length === 2
+                        ? getColorClass(m.status).split(" ")[0]
+                        : "text-gray-400"
+                    }
+                  >
+                    {selectedData.length === 2
+                      ? `${
+                          m.change.startsWith("-") ? "Loss" : "Gain"
+                        }: ${m.change.replace("-", "")}`
+                      : "Gain/Loss: 0"}
+                  </span>
+                </h3>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <div className="flex justify-between text-xs text-gray-600">
+                      <span>{formatDate(fromDate)}</span>
+                      <span className="font-semibold text-gray-900">
+                        {m.start}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-2 ${
+                          getColorClass(m.status).split(" ")[1]
+                        } transition-all duration-500`}
+                        style={{
+                          width: `${startPercent}%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className={`h-2 ${
-                        getColorClass(m.status).split(" ")[1]
-                      } transition-all duration-500`}
-                      style={{
-                        width: selectedData.length === 2 ? "100%" : "0%",
-                      }}
-                    ></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-gray-600">
-                    <span>{formatDate(toDate)}</span>
-                    <span className="font-semibold text-gray-900">{m.end}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                    <div
-                      className={`h-2 ${
-                        getColorClass(m.status).split(" ")[1]
-                      } transition-all duration-500`}
-                      style={{
-                        width: selectedData.length === 2 ? "100%" : "0%",
-                      }}
-                    ></div>
+                  <div>
+                    <div className="flex justify-between text-xs text-gray-600">
+                      <span>{formatDate(toDate)}</span>
+                      <span className="font-semibold text-gray-900">
+                        {m.end}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                      <div
+                        className={`h-2 ${
+                          getColorClass(m.status).split(" ")[1]
+                        } transition-all duration-500`}
+                        style={{
+                          width: `${endPercent}%`,
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
           <div className="flex gap-4 w-full md:w-auto">

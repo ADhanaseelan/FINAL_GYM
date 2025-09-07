@@ -7,7 +7,7 @@ interface AuthState {
   login: (
     email: string,
     password: string,
-    isRembember: boolean
+    isRemember: boolean
   ) => Promise<void>;
   checkAuth: () => Promise<void>;
   logout: () => Promise<void>;
@@ -16,8 +16,8 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: false,
 
-  login: async (email, password, isRembember) => {
-    await api.post("/login", { email, password, isRembember });
+  login: async (email, password, isRemember) => {
+    await api.post("/login", { email, password, isRemember });
     set({ isLoggedIn: true });
   },
 

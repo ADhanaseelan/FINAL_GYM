@@ -15,23 +15,60 @@ import {
   Cell,
   Legend,
   CartesianGrid,
+  BarChart,
+  Bar,
 } from "recharts";
 import { api } from "../../services/api";
 
+// ---------------- Types ----------------
+interface ReportStats {
+  total_revenue: number;
+  monthly_revenue: number;
+  gym_members: number;
+  cardio_members: number;
+}
+
+interface RevenueData {
+  day?: string;
+  month?: string;
+  gym: number;
+  cardio: number;
+}
+
+interface MembershipData {
+  name: string;
+  value: number;
+  color?: string;
+  percentage?: number | string;
+}
+
+interface PaymentTypeData {
+  name: string;
+  online: number;
+  offline: number;
+}
+
+// ---------------- Component ----------------
 const Report: React.FC = () => {
+  // Filters
   const [selectedRevenuePeriod, setSelectedRevenuePeriod] = useState("Month");
   const [selectedMembershipPeriod, setSelectedMembershipPeriod] =
     useState("Month");
-  const [revenueGraph, setRevenueGraph] = useState<any[]>([]);
-  const [membershipData, setMembershipData] = useState<any[]>([]);
-  const [reportData, setReportData] = useState({
+  const [selectedPaymentPeriod, setSelectedPaymentPeriod] = useState("Month");
+
+  // Data states
+  const [revenueGraph, setRevenueGraph] = useState<RevenueData[]>([]);
+  const [membershipData, setMembershipData] = useState<MembershipData[]>([]);
+  const [paymentTypeData, setPaymentTypeData] = useState<PaymentTypeData[]>([]);
+  const [reportData, setReportData] = useState<ReportStats>({
     total_revenue: 0,
     monthly_revenue: 0,
     gym_members: 0,
     cardio_members: 0,
   });
 
-  const colorMap: any = {
+  // Colors for membership pie
+  const colorMap: Record<string, string> = {
     "One Year": "#06B6D4",
     "One Month": "#22C55E",
     "Six Months": "#EF4444",
@@ -39,7 +76,7 @@ const Report: React.FC = () => {
     Others: "#F59E0B",
   };
 
-  // Fetch report data
+  // ---------------- API Calls ----------------
   const fetchReportData = async () => {
     try {
       const res = await api.get("/get-report");
@@ -56,7 +93,6 @@ const Report: React.FC = () => {
     }
   };
 
-  // Fetch revenue graph
   const fetchRevenueGraph = async () => {
     try {
       const endpoint =
@@ -78,7 +114,6 @@ const Report: React.FC = () => {
     }
   };
 
-  // Fetch membership pie chart
   const fetchMembershipData = async () => {
     try {
       const res = await api.get(
@@ -97,10 +132,30 @@ const Report: React.FC = () => {
     }
   };
 
+  const fetchPaymentTypeData = async () => {
+    try {
+      const res = await api.get(
+        `/get-payment-type?period=${selectedPaymentPeriod}`
+      );
+      if (res.status === 200 && res.data) {
+        const formatted = res.data.map((item: any) => ({
+          ...item,
+          online: parseInt(item.online) || 0,
+          offline: parseInt(item.offline) || 0,
+        }));
+        setPaymentTypeData(formatted);
+      }
+    } catch (error) {
+      console.error("Error fetching payment type data:", error);
+    }
+  };
+
+  // ---------------- Effects ----------------
   useEffect(() => {
     fetchReportData();
     fetchRevenueGraph();
     fetchMembershipData();
+    fetchPaymentTypeData();
   }, []);
 
   useEffect(() => {
@@ -111,9 +166,12 @@ const Report: React.FC = () => {
     fetchMembershipData();
   }, [selectedMembershipPeriod]);
 
-  const getFilteredRevenueData = () => {
-    return revenueGraph;
-  };
+  useEffect(() => {
+    fetchPaymentTypeData();
+  }, [selectedPaymentPeriod]);
+
+  // ---------------- Helpers ----------------
+  const getFilteredRevenueData = () => revenueGraph;
 
   const getFilteredMembershipData = () => {
     const total = membershipData.reduce((sum, item) => sum + item.value, 0);
@@ -125,9 +183,8 @@ const Report: React.FC = () => {
 
   const renderLegend = (props: any) => {
     const { payload } = props;
-
     return (
-      <ul className="list-none p-0 m-0 flex flex-wrap gap-4 justify-center mt-4">
+      <ul className="list-none flex flex-wrap gap-4 justify-center mt-4">
         {payload.map((entry: any, index: number) => (
           <li
             key={`item-${index}`}
@@ -171,8 +228,9 @@ const Report: React.FC = () => {
     }
   };
 
+  // ---------------- Render ----------------
   return (
-    <div className="space-y-8 bg-gray-50">
+    <div className="space-y-8 bg-gray-50 p-6 min-h-screen">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
@@ -185,7 +243,7 @@ const Report: React.FC = () => {
           {
             title: "Month Revenue",
             value: `₹${reportData.monthly_revenue.toLocaleString()}`,
-            subtitle: `Current Month`,
+            subtitle: `This Month`,
             icon: <GiNetworkBars className="text-emerald-500 text-2xl" />,
             bg: "bg-emerald-50",
           },
@@ -230,52 +288,39 @@ const Report: React.FC = () => {
         ))}
       </div>
 
-      {/* Revenue Analysis + Membership Plan */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Revenue Chart */}
-        <motion.div
-          initial={{ opacity: 0, x: -60 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="lg:w-[75%] w-full bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-auto"
-        >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              Revenue Analysis
-            </h2>
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-0.5 w-5"
-                  style={{ backgroundColor: "#f97316" }}
-                />
-                <span className="text-sm font-medium text-gray-600">Gym</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-0.5 w-5 bg-blue-500"></div>
-                <span className="text-sm font-medium text-gray-600">
-                  Cardio
-                </span>
-              </div>
-              <select
-                value={selectedRevenuePeriod}
-                onChange={(e) => setSelectedRevenuePeriod(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              >
-                <option value="Month">Month</option>
-                <option value="Year">Year</option>
-              </select>
+      {/* Revenue Chart - Full width with scroll */}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="w-full bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Revenue Analysis</h2>
+          <div className="flex items-center space-x-6">
+            <div className="flex items-center gap-2">
+              <div className="h-0.5 w-5" style={{ backgroundColor: "#f97316" }} />
+              <span className="text-sm font-medium text-gray-600">Gym</span>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="h-0.5 w-5 bg-blue-500"></div>
+              <span className="text-sm font-medium text-gray-600">Cardio</span>
+            </div>
+            <select
+              value={selectedRevenuePeriod}
+              onChange={(e) => setSelectedRevenuePeriod(e.target.value)}
+              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="Month">Month</option>
+              <option value="Year">Year</option>
+            </select>
           </div>
+        </div>
 
-          {/* Revenue Graph */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1.2 }}
-            className="flex items-center justify-center w-full h-[300px]"
-          >
-            <ResponsiveContainer width={1000} height="100%">
+        {/* Scrollable container for mobile */}
+        <div className="overflow-x-auto">
+          <div className="min-w-[700px] h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={getFilteredRevenueData()}
                 margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
@@ -292,8 +337,6 @@ const Report: React.FC = () => {
                   stroke="#f97316"
                   strokeWidth={2}
                   dot={false}
-                  isAnimationActive={true}
-                  animationDuration={1200}
                 />
                 <Line
                   type="monotone"
@@ -301,25 +344,58 @@ const Report: React.FC = () => {
                   stroke="#3b82f6"
                   strokeWidth={2}
                   dot={false}
-                  isAnimationActive={true}
-                  animationDuration={1200}
                 />
               </LineChart>
             </ResponsiveContainer>
-          </motion.div>
-
-          <div className="flex justify-between text-sm mt-2">
-            <span>Top Revenue : Gym</span>
-            <span>{getPeakRevenueInfo()}</span>
           </div>
+        </div>
+
+        <div className="flex justify-between text-sm mt-2">
+          <span>Top Revenue : Gym</span>
+          <span>{getPeakRevenueInfo()}</span>
+        </div>
+      </motion.div>
+
+      {/* Bar + Pie side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Payment Type Bar Chart */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="bg-white p-6 rounded-xl shadow-md border border-gray-100"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-bold">Payment Type Analysis</h2>
+            <select
+              value={selectedPaymentPeriod}
+              onChange={(e) => setSelectedPaymentPeriod(e.target.value)}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              <option value="Month">Month</option>
+              <option value="Year">Year</option>
+            </select>
+          </div>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={paymentTypeData}>
+              {/* Dotted grid lines */}
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="online" fill="#3b82f6" />
+              <Bar dataKey="offline" fill="#22c55e" />
+            </BarChart>
+          </ResponsiveContainer>
         </motion.div>
 
         {/* Membership Pie Chart */}
         <motion.div
-          initial={{ opacity: 0, x: 60 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="lg:w-[25%] w-full bg-white p-4 rounded-2xl shadow-md"
+          className="bg-white p-6 rounded-2xl shadow-md"
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Top Membership Plan</h2>
@@ -332,7 +408,7 @@ const Report: React.FC = () => {
               <option value="Year">Year</option>
             </select>
           </div>
-          <ResponsiveContainer width="100%" height={400}>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={getFilteredMembershipData()}
@@ -340,8 +416,6 @@ const Report: React.FC = () => {
                 cy="50%"
                 outerRadius={100}
                 dataKey="value"
-                isAnimationActive={true}
-                animationDuration={1000}
               >
                 {getFilteredMembershipData().map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />

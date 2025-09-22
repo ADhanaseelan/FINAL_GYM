@@ -2,11 +2,12 @@
 import { useRef, useEffect } from "react";
 
 // Icons
-import { MdOutlineLogout, MdFitnessCenter } from "react-icons/md";
+import { MdOutlineLogout } from "react-icons/md";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { GiNetworkBars } from "react-icons/gi";
 import { FiUsers, FiHome } from "react-icons/fi";
 import { FaPlus } from "react-icons/fa6";
+import { IoSettingsOutline } from "react-icons/io5";
 
 // Authenticate
 import { useAuthStore } from "../../store/authStore";
@@ -116,16 +117,24 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           <FiUsers className="w-5 h-5" /> {isOpen && "Member List"}
         </NavLink>
 
-        <NavLink
+        {/* <NavLink
           to="/Addprogress"
           className={linkClass}
           onClick={handleLinkClick}
         >
           <MdFitnessCenter className="w-5 h-5" /> {isOpen && "Add Progress"}
-        </NavLink>
+        </NavLink> */}
 
         <NavLink to="/report" className={linkClass} onClick={handleLinkClick}>
           <GiNetworkBars className="w-5 h-5" /> {isOpen && "Report"}
+        </NavLink>
+
+         <NavLink
+          to="/settings"
+          className={linkClass}
+          onClick={handleLinkClick}
+        >
+          < IoSettingsOutline className="w-5 h-5" /> {isOpen && "Settings"}
         </NavLink>
 
         {/* Logout now calls handleLogout */}

@@ -230,7 +230,7 @@ const MembershipDetails = () => {
           options={[
             { label: "Online", value: "Online" },
             { label: "Cash", value: "Cash" },
-            { label: "UPI", value: "UPI" },
+            // { label: "UPI", value: "UPI" }/*,
           ]}
           onChange={(value) => setValue("paymentType", value)}
         />

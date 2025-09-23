@@ -56,7 +56,7 @@ const LoginDetails: React.FC<{ user: User }> = ({ user }) => {
           onClick={handleEditSaveClick}
           className="text-sm text-black-600 bg-gray-300 pt-[10px] pb-[10px] px-[14px] rounded-lg hover:underline"
         >
-          {isEditing ? "Save" : "Edit"}
+          {isEditing ? "Save" : "Reset"}
         </button>
       </div>
 

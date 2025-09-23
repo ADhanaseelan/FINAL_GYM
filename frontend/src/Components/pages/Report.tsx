@@ -55,6 +55,17 @@ const Report: React.FC = () => {
   const [selectedMembershipPeriod, setSelectedMembershipPeriod] =
     useState("Month");
   const [selectedPaymentPeriod, setSelectedPaymentPeriod] = useState("Month");
+  const [chartData, setChartData] = useState<any[]>([]);
+
+  const transformChartData = (data: any) => {
+  return Object.entries(data).map(([key, value]: [string, any]) => ({
+    name: key,
+    cash: value.cash || 0,
+    online: value.online || 0,
+  }));
+};
+
+
 
   // Data states
   const [revenueGraph, setRevenueGraph] = useState<RevenueData[]>([]);
@@ -114,6 +125,24 @@ const Report: React.FC = () => {
     }
   };
 
+const fetchPaymentChart = async () => {
+  try {
+    const response = await api.get("/get-payment-chart");
+    const formatted = Object.entries(response.data).map(
+      ([key, value]: [string, any]) => ({
+        name: key,
+        cash: value.cash || 0,
+        online: value.online || 0,
+      })
+    );
+
+    setChartData(formatted);
+  } catch (error) {
+    console.error("Error fetching payment chart:", error);
+  }
+};
+
+
   const fetchMembershipData = async () => {
     try {
       const res = await api.get(
@@ -154,6 +183,7 @@ const Report: React.FC = () => {
   useEffect(() => {
     fetchReportData();
     fetchRevenueGraph();
+    fetchPaymentChart()
     fetchMembershipData();
     fetchPaymentTypeData();
   }, []);
@@ -367,27 +397,19 @@ const Report: React.FC = () => {
         >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Payment Type Analysis</h2>
-            <select
-              value={selectedPaymentPeriod}
-              onChange={(e) => setSelectedPaymentPeriod(e.target.value)}
-              className="border rounded px-2 py-1 text-sm"
-            >
-              <option value="Month">Month</option>
-              <option value="Year">Year</option>
-            </select>
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={paymentTypeData}>
-              {/* Dotted grid lines */}
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="online" fill="#3b82f6" />
-              <Bar dataKey="offline" fill="#22c55e" />
-            </BarChart>
-          </ResponsiveContainer>
+  <BarChart data={chartData}>
+    <CartesianGrid strokeDasharray="3 3" />
+    <XAxis dataKey="name" />
+    <YAxis />
+    <Tooltip />
+    <Legend />
+    <Bar dataKey="cash" fill="#22c55e" name="Cash" />
+    <Bar dataKey="online" fill="#3b82f6" name="Online" />
+  </BarChart>
+</ResponsiveContainer>
+
         </motion.div>
 
         {/* Membership Pie Chart */}

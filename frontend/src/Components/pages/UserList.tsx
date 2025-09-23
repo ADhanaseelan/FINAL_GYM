@@ -14,14 +14,14 @@ import { api } from "../../services/api";
 // Icons
 import { BsBoxArrowUp } from "react-icons/bs";
 import { FiFilter } from "react-icons/fi";
-import { MdOutlineArrowOutward } from "react-icons/md";
+import {FaPlusSquare} from "react-icons/fa";
 
 type User = {
   user_id: string;
   candidate_name: string;
   phone_number: string;
   date_of_joining: string;
-  blood_group: string;
+  date_of_birth: string;
   premium_type: string;
   status: string;
 };
@@ -35,7 +35,6 @@ const UserList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
 
-  // Refs for outside click
   const exportRef = useRef<HTMLDivElement>(null);
   const exportBtnRef = useRef<HTMLButtonElement>(null);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -45,7 +44,7 @@ const UserList: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setShowTopBtn(window.scrollY > 300); // Show button after scrolling 300px
+      setShowTopBtn(window.scrollY > 300);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -55,7 +54,6 @@ const UserList: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -67,7 +65,6 @@ const UserList: React.FC = () => {
       ) {
         setDropdownOpen(false);
       }
-
       if (
         filterOpen &&
         filterRef.current &&
@@ -80,16 +77,14 @@ const UserList: React.FC = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen, filterOpen]);
 
-  // Fetch users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await api.get("/get-user-lists");
+        console.log("Fetched users:", response.data);
         const fetchedUsers: User[] = response.data
           .map((u: any) => ({
             user_id: u.user_id,
@@ -98,7 +93,9 @@ const UserList: React.FC = () => {
             date_of_joining: new Date(u.date_of_joining).toLocaleDateString(
               "en-GB"
             ),
-            blood_group: u.blood_group,
+            date_of_birth: new Date(u.date_of_birth).toLocaleDateString(
+              "en-GB"
+            ),
             premium_type: u.premium_type,
             status: u.status.charAt(0).toUpperCase() + u.status.slice(1),
           }))
@@ -113,7 +110,6 @@ const UserList: React.FC = () => {
     fetchUsers();
   }, []);
 
-  // Export to Excel
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(users);
     const workbook = XLSX.utils.book_new();
@@ -121,7 +117,6 @@ const UserList: React.FC = () => {
     XLSX.writeFile(workbook, "UserList.xlsx");
   };
 
-  // Export to PDF
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.text("User List", 14, 10);
@@ -130,8 +125,8 @@ const UserList: React.FC = () => {
       "Name",
       "Mobile No",
       "Joining Date",
-      "Blood Group",
-      "Duration",
+      "Date of Birth",
+      "Durations",
       "Status",
     ];
     const tableRows = users.map((user) => [
@@ -139,7 +134,7 @@ const UserList: React.FC = () => {
       user.candidate_name,
       user.phone_number,
       user.date_of_joining,
-      user.blood_group,
+      user.date_of_birth,
       user.premium_type,
       user.status,
     ]);
@@ -151,12 +146,14 @@ const UserList: React.FC = () => {
     doc.save("UserList.pdf");
   };
 
-  // Row click handler
   const handleRowClick = (user: User) => {
     navigate(`/user-overview/${user.user_id}`);
   };
 
-  // Filter users
+  const handleProgressClick = (user: User) => {
+    navigate(`/Addprogress/${user.user_id}`);
+  };
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       (user.candidate_name?.toLowerCase() || "").includes(
@@ -173,9 +170,7 @@ const UserList: React.FC = () => {
       <div className="p-6 space-y-6">
         {/* Controls Section */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          {/* Left: Search + Status Filter */}
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-2/3">
-            {/* Search box */}
             <div className="w-full sm:w-1/2">
               <SearchBox
                 placeholder="Find something here..."
@@ -184,7 +179,6 @@ const UserList: React.FC = () => {
               />
             </div>
 
-            {/* Status filter */}
             <div className="relative w-full sm:w-1/2">
               <button
                 ref={filterBtnRef}
@@ -208,11 +202,7 @@ const UserList: React.FC = () => {
                   strokeWidth="2"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
 
@@ -238,7 +228,6 @@ const UserList: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Controls (Export + New Member) */}
           <div className="flex items-center gap-4">
             <div className="relative">
               <button
@@ -294,16 +283,17 @@ const UserList: React.FC = () => {
                   "Name",
                   "Mobile No",
                   "Joining Date",
-                  "Blood Group",
+                  "Date of Birth",
                   "Duration",
                   "Status",
+                  "Progress",
                 ].map((header, idx) => (
                   <th
                     key={header}
                     className={`px-6 py-4 text-left font-semibold text-[16px] leading-[22px] tracking-[0%] whitespace-nowrap ${
                       idx === 0
                         ? "rounded-tl-lg"
-                        : idx === 6
+                        : idx === 7
                         ? "rounded-tr-lg"
                         : ""
                     }`}
@@ -317,37 +307,32 @@ const UserList: React.FC = () => {
               {filteredUsers.map((user) => (
                 <tr
                   key={user.user_id}
-                  onClick={() => handleRowClick(user)}
                   className="hover:bg-gray-50 cursor-pointer transition font-semibold text-[14px] leading-[22px] tracking-[0%]"
                 >
-                  <td className="px-6 py-4">{user.user_id}</td>
-                  <td className="px-6 py-4">{user.candidate_name}</td>
-                  <td className="px-6 py-4">{user.phone_number}</td>
-                  <td className="px-6 py-4">{user.date_of_joining}</td>
-                  <td className="px-6 py-4">{user.blood_group}</td>
-                  <td className="px-6 py-4">{user.premium_type}</td>
+                  <td className="px-6 py-4" onClick={() => handleRowClick(user)}>{user.user_id}</td>
+                  <td className="px-6 py-4" onClick={() => handleRowClick(user)}>{user.candidate_name}</td>
+                  <td className="px-6 py-4" onClick={() => handleRowClick(user)}>{user.phone_number}</td>
+                  <td className="px-6 py-4" onClick={() => handleRowClick(user)}>{user.date_of_joining}</td>
+                  <td className="px-6 py-4" onClick={() => handleRowClick(user)}>{user.date_of_birth}</td>
+                  <td className="px-6 py-4" onClick={() => handleRowClick(user)}>{user.premium_type + " Months"}</td>
+                  <td className="px-6 py-4" onClick={() => handleRowClick(user)}>
+                    <span className={`px-2 py-1 font-semibold text-[14px] leading-[22px] tracking-[0%] ${user.status === "Active" ? "text-green-700" : "text-red-700"}`}>
+                      {user.status}
+                    </span>
+                  </td>
                   <td className="px-6 py-4">
-                    <div className="inline-flex items-center gap-2">
-                      <span
-                        className={`px-2 py-1 font-semibold text-[14px] leading-[22px] tracking-[0%] ${
-                          user.status === "Active"
-                            ? "text-green-700"
-                            : "text-red-700"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                      <MdOutlineArrowOutward className="w-4 h-4" />
-                    </div>
+                    <button
+                      className=" w-20 h-6 flex items-center justify-center "
+                      onClick={() => handleProgressClick(user)}
+                    >
+                      <FaPlusSquare  className="text-2xl"/>
+                    </button>
                   </td>
                 </tr>
               ))}
               {filteredUsers.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
+                  <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                     No matching records found
                   </td>
                 </tr>

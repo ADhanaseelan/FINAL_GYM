@@ -86,12 +86,24 @@ const ProgressTracker: React.FC = () => {
     { label: "Body Age", start: 0, end: 0, change: "0", status: "neutral" },
   ];
 
+  // ✅ Formatter for floats
+const formatNumber = (value: any) => {
+  const num = Number(value);   // convert to number
+
+  if (isNaN(num)) return value; // fallback if it's not a number at all
+
+  return Number.isInteger(num) ? num : num.toFixed(2);
+};
+
+
   const metrics = useMemo(() => {
     if (selectedData.length !== 2) return defaultMetrics;
     const [start, end] = [...selectedData].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
+
     const getStatus = (label: string, diff: number) => {
+      if (diff === 0) return "maintain-blue"; // NEW maintain case
       if (["Fat", "Visceral Fat", "Body Age"].includes(label)) {
         return diff < 0 ? "loss-green" : "gain-red";
       }
@@ -100,47 +112,48 @@ const ProgressTracker: React.FC = () => {
       }
       return "neutral";
     };
+
     return [
       {
         label: "Weight",
         start: start.weight,
         end: end.weight,
-        change: `${end.weight - start.weight}Kg`,
+        change: `${(end.weight - start.weight).toFixed(2)}Kg`,
         status: getStatus("Weight", end.weight - start.weight),
       },
       {
         label: "Fat",
         start: start.fat,
         end: end.fat,
-        change: `${end.fat - start.fat}%`,
+        change: `${(end.fat - start.fat).toFixed(2)}%`,
         status: getStatus("Fat", end.fat - start.fat),
       },
       {
         label: "Visceral Fat",
         start: start.vfat,
         end: end.vfat,
-        change: `${end.vfat - start.vfat}`,
+        change: `${(end.vfat - start.vfat).toFixed(2)}`,
         status: getStatus("Visceral Fat", end.vfat - start.vfat),
       },
       {
         label: "BMR",
         start: start.bmr,
         end: end.bmr,
-        change: `${end.bmr - start.bmr}`,
+        change: `${(end.bmr - start.bmr).toFixed(2)}`,
         status: getStatus("BMR", end.bmr - start.bmr),
       },
       {
         label: "BMI",
         start: start.bmi,
         end: end.bmi,
-        change: `${end.bmi - start.bmi}`,
+        change: `${(end.bmi - start.bmi).toFixed(2)}`,
         status: getStatus("BMI", end.bmi - start.bmi),
       },
       {
         label: "Body Age",
         start: start.bodyAge,
         end: end.bodyAge,
-        change: `${end.bodyAge - start.bodyAge}`,
+        change: `${(end.bodyAge - start.bodyAge).toFixed(2)}`,
         status: getStatus("Body Age", end.bodyAge - start.bodyAge),
       },
     ];
@@ -181,12 +194,12 @@ const ProgressTracker: React.FC = () => {
 
     const worksheetData = data.map((d) => ({
       Date: d.date,
-      Weight: d.weight,
-      Fat: d.fat,
-      "V Fat": d.vfat,
-      BMR: d.bmr,
-      BMI: d.bmi,
-      "Body Age": d.bodyAge,
+      Weight: d.weight.toFixed(2),
+      Fat: d.fat.toFixed(2),
+      "V Fat": d.vfat.toFixed(2),
+      BMR: d.bmr.toFixed(2),
+      BMI: d.bmi.toFixed(2),
+      "Body Age": d.bodyAge.toFixed(2),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -215,6 +228,8 @@ const ProgressTracker: React.FC = () => {
         return "text-green-600 bg-green-500";
       case "loss-red":
         return "text-red-600 bg-red-500";
+      case "maintain-blue":
+        return "text-blue-600 bg-blue-500"; // NEW maintain case
       default:
         return "text-gray-500 bg-gray-300";
     }
@@ -227,7 +242,6 @@ const ProgressTracker: React.FC = () => {
       } else if (prev.length < 2) {
         return [...prev, date];
       } else {
-        const [] = prev;
         return [prev[1], date].sort(
           (a, b) => new Date(a).getTime() - new Date(b).getTime()
         );
@@ -244,9 +258,8 @@ const ProgressTracker: React.FC = () => {
     });
   };
 
-  // NEW: Corrected getBarWidth
   const getBarWidth = (start: number, end: number) => {
-    const max = Math.max(start, end, 1); // avoid divide by zero
+    const max = Math.max(start, end, 1);
     const startPercent = (start / max) * 100;
     const endPercent = (end / max) * 100;
     return { startPercent, endPercent };
@@ -269,26 +282,25 @@ const ProgressTracker: React.FC = () => {
               >
                 <h3 className="font-semibold text-sm text-gray-800">
                   {m.label}{" "}
-                  <span
-                    className={
-                      selectedData.length === 2
-                        ? getColorClass(m.status).split(" ")[0]
-                        : "text-gray-400"
-                    }
-                  >
-                    {selectedData.length === 2
-                      ? `${
-                          m.change.startsWith("-") ? "Loss" : "Gain"
-                        }: ${m.change.replace("-", "")}`
-                      : "Gain/Loss: 0"}
-                  </span>
+                  {selectedData.length === 2 ? (
+                    m.status === "maintain-blue" ? (
+                      <span className="text-blue-600">Maintain</span>
+                    ) : (
+                      <span className={getColorClass(m.status).split(" ")[0]}>
+                        {m.change.startsWith("-") ? "Loss" : "Gain"}:{" "}
+                        {m.change.replace("-", "")}
+                      </span>
+                    )
+                  ) : (
+                    "Gain/Loss: 0"
+                  )}
                 </h3>
                 <div className="mt-3 space-y-3">
                   <div>
                     <div className="flex justify-between text-xs text-gray-600">
                       <span>{formatDate(fromDate)}</span>
                       <span className="font-semibold text-gray-900">
-                        {m.start}
+                        {formatNumber(m.start)}
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
@@ -306,7 +318,7 @@ const ProgressTracker: React.FC = () => {
                     <div className="flex justify-between text-xs text-gray-600">
                       <span>{formatDate(toDate)}</span>
                       <span className="font-semibold text-gray-900">
-                        {m.end}
+                        {formatNumber(m.end)}
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
@@ -385,12 +397,12 @@ const ProgressTracker: React.FC = () => {
                       />
                     </td>
                     <td className="p-3">{formatDate(d.date)}</td>
-                    <td className="p-3">{d.weight}Kg</td>
-                    <td className="p-3">{d.fat}%</td>
-                    <td className="p-3">{d.vfat}</td>
-                    <td className="p-3">{d.bmr}</td>
-                    <td className="p-3">{d.bmi}</td>
-                    <td className="p-3">{d.bodyAge}</td>
+                    <td className="p-3">{formatNumber(d.weight)}Kg</td>
+                    <td className="p-3">{formatNumber(d.fat)}%</td>
+                    <td className="p-3">{formatNumber(d.vfat)}</td>
+                    <td className="p-3">{formatNumber(d.bmr)}</td>
+                    <td className="p-3">{formatNumber(d.bmi)}</td>
+                    <td className="p-3">{formatNumber(d.bodyAge)}</td>
                   </tr>
                 ))}
               </tbody>

@@ -28,6 +28,7 @@ const {
   getCandidateLists,
   getMonthRevenueGraph,
   getPieChart,
+  getPaymentGraph,
 } = require("../controller/adminGet.controller");
 
 const {
@@ -93,7 +94,7 @@ router.get("/get-report", authMiddleware, getReport);
 router.get("/revenue-year-graph", authMiddleware, getRevenueGraph);
 router.get("/revenue-month-graph", authMiddleware, getMonthRevenueGraph);
 router.get("/get-pie-chart", authMiddleware, getPieChart);
-// router.get("/get-memberhip-plans", authMiddleware, getMembershipPlans);
+router.get("/get-payment-chart",getPaymentGraph);
 router.get("/get-old-premium", authMiddleware, getPreviousMemberships);
 router.get("/get-previous-premium", authMiddleware, getPreviousPremium);
 router.get("/auth-me", checkAuth);

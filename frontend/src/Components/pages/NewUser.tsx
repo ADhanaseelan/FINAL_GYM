@@ -360,7 +360,7 @@ const NewUser: React.FC = () => {
               id="height"
               label="Height *"
               type="number"
-              step="0.1"
+              step="any"
               placeholder="Enter height in cm"
               {...register("height", {
                 required: "Height is required",
@@ -375,7 +375,7 @@ const NewUser: React.FC = () => {
               id="weight"
               label="Weight *"
               type="number"
-              step="0.1"
+              step="any"
               placeholder="Enter weight in kg"
               {...register("weight", {
                 required: "Weight is required",

@@ -86,7 +86,7 @@ const App: React.FC = () => {
             path="membership-details/:id"
             element={<MembershipDetails />}
           />
-          <Route path="/Addprogress" element={<ProgressTracking />} />
+          <Route path="Addprogress/:id" element={<ProgressTracking />} />
         </Route>
       </Routes>
     </Router>

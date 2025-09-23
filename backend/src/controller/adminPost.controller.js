@@ -168,11 +168,11 @@ const registerMemberShip = async (req, res) => {
 
     const insertRevenueQuery = `
       INSERT INTO revenue_analysis (amount, date_payes)
-      VALUES ($1, CURRENT_DATE)
+      VALUES ($1, $2)
       RETURNING *;
     `;
 
-    await client.query(insertRevenueQuery, [amount]);
+    await client.query(insertRevenueQuery, [amount, startDate]);
 
     await client.query("COMMIT");
 
@@ -191,17 +191,15 @@ const registerMemberShip = async (req, res) => {
 
 // Progress Page
 const registerProgress = async (req, res) => {
-  const { date, vFat, userId, bmr, candidateName, bmi, weight, bAge, fat } =
+  const { date, vFat, userId, bmr, bmi, weight, bAge, fat } =
     req.body;
 
   try {
     const lowerUserId = userId;
-    const lowerCandidateName = candidateName;
 
     const query = `
       INSERT INTO progress_tracking (
         user_id,
-        candidate_name,
         entry_date,
         weight_kg,
         fat,
@@ -210,13 +208,12 @@ const registerProgress = async (req, res) => {
         bmi,
         b_age
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       RETURNING *;
     `;
 
     const values = [
       lowerUserId,
-      lowerCandidateName,
       date,
       weight,
       fat,

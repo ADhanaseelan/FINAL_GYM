@@ -25,6 +25,7 @@ import "react-toastify/dist/ReactToastify.css";
 // Authentication
 import { useAuthStore } from "./store/authStore";
 import Membership from "./Components/pages/Membership";
+import Settings from "./Components/pages/settings";
 
 const ProtectedRoute: React.FC<{
   isAuth: boolean;
@@ -69,9 +70,9 @@ const App: React.FC = () => {
         <Route
           path="/"
           element={
-            <ProtectedRoute isAuth={isLoggedIn}>
+            // <ProtectedRoute isAuth={isLoggedIn}>
               <Layout />
-            </ProtectedRoute>
+            // </ProtectedRoute>
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
@@ -80,6 +81,7 @@ const App: React.FC = () => {
           <Route path="member-list" element={<UserList />} />
           <Route path="progress/:id" element={<Progress />} />
           <Route path="report" element={<Report />} />
+          <Route path="settings" element={<Settings />}/>
           <Route path="membership-update/:id" element={<Membership />} />
           <Route path="user-overview/:id" element={<UserOverview />} />
           <Route

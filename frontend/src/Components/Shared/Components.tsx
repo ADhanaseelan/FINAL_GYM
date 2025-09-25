@@ -16,10 +16,9 @@ interface LabelInputProps {
   id?: string;
 }
 
-// Input
 export const LabelInput: React.FC<
-  LabelInputProps & React.InputHTMLAttributes<HTMLInputElement>
-> = ({ label, error, id, name, ...inputProps }) => {
+  LabelInputProps & React.InputHTMLAttributes<HTMLInputElement> & { disabled?: boolean }
+> = ({ label, error, id, ...inputProps }) => {
   return (
     <div className="w-full max-w-md mb-4">
       <label
@@ -31,15 +30,20 @@ export const LabelInput: React.FC<
       <input
         {...inputProps}
         id={id}
-        name={id}
+        disabled={inputProps.disabled} // ✅ handle disabled
         className={`w-full h-12 rounded-md border px-3 text-sm focus:border-teal-500 focus:ring focus:ring-teal-200 outline-none ${
-          error ? "border-red-500 bg-red-50" : "border-gray-300 bg-white"
+          error
+            ? "border-red-500 bg-red-50"
+            : inputProps.disabled
+            ? "border-gray-300 bg-gray-100 cursor-not-allowed"
+            : "border-gray-300 bg-white"
         }`}
       />
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 };
+
 
 /* ---------------- RadioGroup ---------------- */
 interface RadioOption {
@@ -106,6 +110,9 @@ interface CustomDropdownProps {
   onBlur?: () => void;
   name?: string;
   error?: string;
+  placeholder?: string; 
+  className?: string;
+  disabled?: boolean;
 }
 
 export const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -115,22 +122,24 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   onChange,
   onBlur,
   error,
+  placeholder,
+  className,
+  disabled = false, // default false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const handleSelect = (selectedValue: string) => {
-    onChange?.(selectedValue);
-    onBlur?.(); // inform RHF about touch
-    setIsOpen(false);
+    if (!disabled) {
+      onChange?.(selectedValue);
+      onBlur?.();
+      setIsOpen(false);
+    }
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -139,30 +148,31 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
   }, []);
 
   const selectedLabel =
-    options.find((opt) => opt.value === value)?.label || "Select Option";
+    options.find((opt) => opt.value === value)?.label || placeholder || "Select Option";
 
   return (
-    <div className="w-full max-w-md mb-4 relative" ref={dropdownRef}>
-      <label className="block mb-2 font-medium text-sm text-gray-900">
-        {label}
-      </label>
+    <div className={`w-full max-w-md mb-4 relative ${className}`} ref={dropdownRef}>
+      <label className="block mb-2 font-medium text-sm text-gray-900">{label}</label>
+
       <div
-        className={`relative w-full h-11 rounded-md border px-3 flex items-center justify-between cursor-pointer ${
+        className={`relative w-full h-12 rounded-md border px-3 flex items-center justify-between cursor-pointer ${
           error ? "border-red-500" : "border-gray-300"
-        } bg-white hover:border-teal-500`}
-        onClick={() => setIsOpen((prev) => !prev)}
+        } bg-white hover:border-teal-500 ${disabled ? "bg-gray-100 cursor-not-allowed" : ""}`}
+        onClick={() => !disabled && setIsOpen((prev) => !prev)}
       >
-        <span className="text-sm text-gray-800">{selectedLabel}</span>
+        <span className={`text-sm text-gray-800 ${disabled ? "text-gray-500" : ""}`}>
+          {selectedLabel}
+        </span>
         <RiArrowDropDownLine className="text-gray-500 text-lg" />
       </div>
 
-      {isOpen && (
-        <ul className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-md z-10">
+      {isOpen && !disabled && (
+        <ul className="absolute mt-1 w-full py-2 bg-white border border-gray-300 rounded-md shadow-md z-10">
           {options.map((opt) => (
             <li
               key={opt.value}
               onClick={() => handleSelect(opt.value)}
-              className="px-3 py-2 text-sm text-gray-800 hover:bg-teal-100 cursor-pointer"
+              className="px-3 py-3 text-sm text-gray-800 hover:bg-teal-100 cursor-pointer"
             >
               {opt.label}
             </li>
@@ -170,10 +180,11 @@ export const CustomDropdown: React.FC<CustomDropdownProps> = ({
         </ul>
       )}
 
-      {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 };
+
 
 /* ---------------- SearchBox ---------------- */
 interface SearchBoxProps {

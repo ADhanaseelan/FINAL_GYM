@@ -191,8 +191,7 @@ const registerMemberShip = async (req, res) => {
 
 // Progress Page
 const registerProgress = async (req, res) => {
-  const { date, vFat, userId, bmr, bmi, weight, bAge, fat } =
-    req.body;
+  const { date, vFat, userId, bmr, bmi, weight, bAge, fat } = req.body;
 
   try {
     const lowerUserId = userId;
@@ -212,16 +211,7 @@ const registerProgress = async (req, res) => {
       RETURNING *;
     `;
 
-    const values = [
-      lowerUserId,
-      date,
-      weight,
-      fat,
-      vFat,
-      bmr,
-      bmi,
-      bAge,
-    ];
+    const values = [lowerUserId, date, weight, fat, vFat, bmr, bmi, bAge];
 
     const { rows } = await db.query(query, values);
 
@@ -311,10 +301,34 @@ const returnToken = async (req, res) => {
   }
 };
 
+const addMembershipAmount = async (req, res) => {
+  const { candidateType, instructor, duration, amount } = req.body;
+
+  if (!candidateType || !instructor || !duration || !amount) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  try {
+    const sql = `
+      INSERT INTO membership_settings 
+        (candidate_type, instructor, duration, amount) 
+      VALUES ($1, $2, $3, $4)
+    `;
+
+    await db.query(sql, [candidateType, instructor, duration, amount]);
+
+    return res.status(201).json({ message: "Membership added successfully" });
+  } catch (error) {
+    console.error("Error adding membership:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerCandidate,
   registerProgress,
   registerMemberShip,
   registerLogin,
   returnToken,
+  addMembershipAmount,
 };

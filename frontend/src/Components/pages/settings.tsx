@@ -47,60 +47,62 @@ const Settings: React.FC = () => {
     defaultValues: { ...defaultValues, candidateType: "Cardio" },
   });
 
+  // ✅ this function now posts sequentially using your api instance
   const onSubmitBoth = async (
     dataGym: MembershipForm,
     dataCardio: MembershipForm
   ) => {
     setLoading(true);
     try {
-      const responses = await Promise.all([
-        api.post("/settings/gym", dataGym),
-        api.post("/settings/cardio", dataCardio),
-      ]);
+      // first call: Gym
+      const gymResponse = await api.post("/settings/gym", {
+        candidateType: dataGym.candidateType,
+        instructor: dataGym.instructor,
+        duration: dataGym.duration,
+        amount: dataGym.amount,
+      });
 
-      if (responses[0].status === 201 && responses[1].status === 201) {
+      // second call: Cardio
+      const cardioResponse = await api.post("/settings/cardio", {
+        candidateType: dataCardio.candidateType,
+        instructor: dataCardio.instructor,
+        duration: dataCardio.duration,
+        amount: dataCardio.amount,
+      });
+
+      if (gymResponse.status === 201 && cardioResponse.status === 201) {
         toast.success("Settings saved successfully", { autoClose: 1500 });
-        resetGym();
-        resetCardio();
-        setIsEditable(false); // Disable editing and hide Save button
+        resetGym({ ...defaultValues, candidateType: "Gym" });
+        resetCardio({ ...defaultValues, candidateType: "Cardio" });
+        setIsEditable(false); // Disable editing
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to save settings");
     } finally {
       setLoading(false);
     }
   };
-const handleSubmitBoth = async () => {
-  let gymData: MembershipForm | null = null;
-  let cardioData: MembershipForm | null = null;
 
-  // Validate Gym
-  await handleSubmitGym(
-    (data) => {
-      gymData = data;
-    },
-    () => {
-      gymData = null; // Gym has errors
-    }
-  )();
+  const handleSubmitBoth = async () => {
+    let gymData: MembershipForm | null = null;
+    let cardioData: MembershipForm | null = null;
 
-  // Validate Cardio
-  await handleSubmitCardio(
-    (data) => {
-      cardioData = data;
-    },
-    () => {
-      cardioData = null; // Cardio has errors
-    }
-  )();
+    // Validate Gym form
+    await handleSubmitGym(
+      (data) => (gymData = data),
+      () => (gymData = null)
+    )();
+    // Validate Cardio form
+    await handleSubmitCardio(
+      (data) => (cardioData = data),
+      () => (cardioData = null)
+    )();
 
-  // If either has errors, stop
-  if (!gymData || !cardioData) return;
+    if (!gymData || !cardioData) return;
 
-  // Both valid, submit
-  onSubmitBoth(gymData, cardioData);
-};
-
+    await onSubmitBoth(gymData, cardioData);
+  };
 
   return (
     <div className="w-full min-h-screen p-8 max-md:p-2 bg-white">
@@ -140,7 +142,6 @@ const handleSubmitBoth = async () => {
                     options={[
                       { label: "General Trainer", value: "General" },
                       { label: "Personal Trainer", value: "Special" },
-                      
                     ]}
                     value={field.value || ""}
                     onChange={field.onChange}

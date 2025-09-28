@@ -742,6 +742,18 @@ const getPaymentGraph = async (req, res) => {
   }
 };
 
+const getMembershipSettings = async (req, res) => {
+  try {
+    const result = await db.query(
+      "SELECT candidate_type, instructor, duration, amount FROM membership_settings ORDER BY candidate_type, instructor, duration"
+    );
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Error fetching membership settings:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   getMembershipDetails,
   getNewUserId,
@@ -760,4 +772,5 @@ module.exports = {
   getMonthRevenueGraph,
   getPieChart,
   getPaymentGraph,
+  getMembershipSettings,
 };

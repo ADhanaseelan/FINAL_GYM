@@ -209,7 +209,6 @@ const MembershipDetails = () => {
           label="Amount"
           type="number"
           {...register("amount", { valueAsNumber: true })}
-          readOnly
         />
         <LabelInput
           label="Duration (Months)"

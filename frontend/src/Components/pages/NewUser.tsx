@@ -40,14 +40,6 @@ type FormData = {
   userId: string;
 };
 
-// Pricing table
-const pricingTable: Record<string, Record<number, number>> = {
-  "Gym-General Trainer": { 1: 1000, 3: 2500, 6: 4500, 12: 8000 },
-  "Gym-Personal Trainer": { 1: 2000, 3: 5000, 6: 9000, 12: 16000 },
-  "Cardio-General Trainer": { 1: 800, 3: 2000, 6: 3500, 12: 6500 },
-  "Cardio-Personal Trainer": { 1: 1500, 3: 4000, 6: 7500, 12: 14000 },
-};
-
 const NewUser: React.FC = () => {
   const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
@@ -73,6 +65,48 @@ const NewUser: React.FC = () => {
   const instructor = watch("instructor");
   const premiumType = watch("premiumType"); // months
 
+  const [pricingTable2, setPricingTable2] = useState<
+    Record<string, Record<number, number>>
+  >({});
+
+  useEffect(() => {
+    const fetchPricing = async () => {
+      try {
+        const response = await api.get("/membership-settings");
+        if (response.status === 200) {
+          const data = response.data; // Array of objects
+
+          const formattedPricing: Record<string, Record<number, number>> = {};
+
+          data.forEach((item: any) => {
+            const key = `${item.candidate_type}-${
+              item.instructor === "General"
+                ? "General Trainer"
+                : "Personal Trainer"
+            }`;
+
+            const months = Number(item.duration.split(" ")[0]); // "12 Months" -> 12
+            const amount = Number(item.amount);
+
+            if (!formattedPricing[key]) {
+              formattedPricing[key] = {};
+            }
+
+            formattedPricing[key][months] = amount;
+          });
+
+          setPricingTable2(formattedPricing);
+        }
+      } catch (err) {
+        console.error("Failed to fetch pricing data", err);
+      }
+    };
+
+    fetchPricing();
+  }, []);
+
+  console.log(pricingTable2);
+
   // Fetch new user ID
   useEffect(() => {
     const fetchUserId = async () => {
@@ -96,7 +130,7 @@ const NewUser: React.FC = () => {
 
     const key = `${candidateType}-${instructor}`;
     const months = Number(premiumType);
-    const amount = pricingTable[key]?.[months] || 0;
+    const amount = pricingTable2[key]?.[months] || 0;
 
     const startDate = today;
     const endDate = new Date(startDate);

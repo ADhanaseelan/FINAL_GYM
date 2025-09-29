@@ -70,9 +70,9 @@ const App: React.FC = () => {
         <Route
           path="/"
           element={
-            // <ProtectedRoute isAuth={isLoggedIn}>
+            <ProtectedRoute isAuth={isLoggedIn}>
               <Layout />
-            // </ProtectedRoute>
+            </ProtectedRoute>
           }
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
@@ -81,7 +81,7 @@ const App: React.FC = () => {
           <Route path="member-list" element={<UserList />} />
           <Route path="progress/:id" element={<Progress />} />
           <Route path="report" element={<Report />} />
-          <Route path="settings" element={<Settings />}/>
+          <Route path="settings" element={<Settings />} />
           <Route path="membership-update/:id" element={<Membership />} />
           <Route path="user-overview/:id" element={<UserOverview />} />
           <Route

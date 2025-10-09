@@ -25,5 +25,5 @@
   - npm start  # it will start the backend
 
 # Database:
-  - All database table creation queries can be found in the [Final-Gym/Database](./Final-Gym/Database) directory.
+  - All database table creation queries can be found in the Final-Gym/Database directory.
 

@@ -1,9 +1,0 @@
-
-Base Url For local : http://localhost:3000/api/admin
-
-Candidate Register Page:
-
-GET  --  /new-user-id     -- Returns the new userid to be inserted
-POST --  /register-candidate  -- Inserts the new users
-POST --  /register-membership -- Inserts the new membership
-DELETE  --  /remove-candidate/:id  -- Delets the user details using the id

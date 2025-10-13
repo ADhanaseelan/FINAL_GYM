@@ -195,7 +195,7 @@ const Membership = () => {
               : "Not Available"}
           </span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow text-center">
+        <div className="bg-white p-4 rounded-lg shadow text-start">
           <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
             Membership Amount
           </p>
@@ -203,7 +203,7 @@ const Membership = () => {
             {latestMembership?.amount || "0"}
           </span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow text-center">
+        <div className="bg-white p-4 rounded-lg shadow text-start">
           <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
             Start Date
           </p>
@@ -213,7 +213,7 @@ const Membership = () => {
               : "N/A"}
           </span>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow text-center">
+        <div className="bg-white p-4 rounded-lg shadow text-start">
           <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
             End Date
           </p>

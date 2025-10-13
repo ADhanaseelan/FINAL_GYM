@@ -1,284 +1,228 @@
 import React, { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  LabelInput,
-  CustomDropdown,
-  PositiveButton,
-} from "../Shared/Components";
+import { PositiveButton } from "../Shared/Components";
 import { api } from "../../services/api";
-
-type MembershipForm = {
-  candidateType: string;
-  instructor: string;
-  duration: string;
-  amount: string;
-};
-
-const defaultValues = {
-  candidateType: "",
-  instructor: "",
-  duration: "",
-  amount: "",
-};
 
 const Settings: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [isEditable, setIsEditable] = useState(false);
 
-  const {
-    register: registerGym,
-    handleSubmit: handleSubmitGym,
-    control: controlGym,
-    formState: { errors: errorsGym },
-    reset: resetGym,
-  } = useForm<MembershipForm>({
-    defaultValues: { ...defaultValues, candidateType: "Gym" },
+  // separate edit modes for each section
+  const [isEditableGym, setIsEditableGym] = useState(false);
+  const [isEditableCardio, setIsEditableCardio] = useState(false);
+
+  // Gym prices
+  const [gymPrices, setGymPrices] = useState({
+    personal: { month1: 6000, month3: 18000, month6: 30000, year1: 50000 },
+    general: { month1: 6000, month3: 18000, month6: 30000, year1: 50000 },
   });
 
-  const {
-    register: registerCardio,
-    handleSubmit: handleSubmitCardio,
-    control: controlCardio,
-    formState: { errors: errorsCardio },
-    reset: resetCardio,
-  } = useForm<MembershipForm>({
-    defaultValues: { ...defaultValues, candidateType: "Cardio" },
+  // Cardio prices
+  const [cardioPrices, setCardioPrices] = useState({
+    personal: { month1: 0, month3: 0, month6: 0, year1: 0 },
+    general: { month1: 0, month3: 0, month6: 0, year1: 0 },
   });
 
-  // ✅ this function now posts sequentially using your api instance
-  const onSubmitBoth = async (
-    dataGym: MembershipForm,
-    dataCardio: MembershipForm
+  // handle input changes dynamically
+  const handleChange = (
+    plan: "gym" | "cardio",
+    type: "personal" | "general",
+    field: keyof typeof gymPrices.personal,
+    value: string
   ) => {
-    setLoading(true);
-    try {
-      // first call: Gym
-      const gymResponse = await api.post("/settings/gym", {
-        candidateType: dataGym.candidateType,
-        instructor: dataGym.instructor,
-        duration: dataGym.duration,
-        amount: dataGym.amount,
-      });
-
-      // second call: Cardio
-      const cardioResponse = await api.post("/settings/cardio", {
-        candidateType: dataCardio.candidateType,
-        instructor: dataCardio.instructor,
-        duration: dataCardio.duration,
-        amount: dataCardio.amount,
-      });
-
-      if (gymResponse.status === 201 && cardioResponse.status === 201) {
-        toast.success("Settings saved successfully", { autoClose: 1500 });
-        resetGym({ ...defaultValues, candidateType: "Gym" });
-        resetCardio({ ...defaultValues, candidateType: "Cardio" });
-        setIsEditable(false); // Disable editing
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to save settings");
-    } finally {
-      setLoading(false);
+    const parsedValue = Number(value.replace(/[^0-9]/g, "")) || 0;
+    if (plan === "gym") {
+      setGymPrices((prev) => ({
+        ...prev,
+        [type]: { ...prev[type], [field]: parsedValue },
+      }));
+    } else {
+      setCardioPrices((prev) => ({
+        ...prev,
+        [type]: { ...prev[type], [field]: parsedValue },
+      }));
     }
   };
 
-  const handleSubmitBoth = async () => {
-    let gymData: MembershipForm | null = null;
-    let cardioData: MembershipForm | null = null;
-
-    // Validate Gym form
-    await handleSubmitGym(
-      (data) => (gymData = data),
-      () => (gymData = null)
-    )();
-    // Validate Cardio form
-    await handleSubmitCardio(
-      (data) => (cardioData = data),
-      () => (cardioData = null)
-    )();
-
-    if (!gymData || !cardioData) return;
-
-    await onSubmitBoth(gymData, cardioData);
+  // toggle Gym save/edit
+  const handleGymToggle = async () => {
+    if (!isEditableGym) {
+      setIsEditableGym(true);
+    } else {
+      setLoading(true);
+      try {
+        await api.post("/settings/gym", gymPrices);
+        toast.success("Gym settings saved successfully", { autoClose: 1500 });
+        setIsEditableGym(false);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to save Gym settings");
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
+  // toggle Cardio save/edit
+  const handleCardioToggle = async () => {
+    if (!isEditableCardio) {
+      setIsEditableCardio(true);
+    } else {
+      setLoading(true);
+      try {
+        await api.post("/settings/cardio", cardioPrices);
+        toast.success("Cardio settings saved successfully", { autoClose: 1500 });
+        setIsEditableCardio(false);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to save Cardio settings");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // helper to format label
+  const formatLabel = (key: string) =>
+    key === "month1"
+      ? "1 Month"
+      : key === "month3"
+      ? "3 Months"
+      : key === "month6"
+      ? "6 Months"
+      : "1 Year";
+
   return (
-    <div className="w-full min-h-screen p-8 max-md:p-2 bg-white">
+    <div className="w-full min-h-screen bg-white p-8">
       <ToastContainer />
-      <div className="flex flex-col gap-10">
-        {/* Edit Button */}
-        <div className="flex justify-end mt-2 mb-4">
-          {!isEditable && (
+      <h1 className="text-lg font-semibold mb-6">Membership Plans</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* === Gym Card === */}
+        <div className="border rounded-lg shadow-sm p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Gym</h2>
             <PositiveButton
-              label="Edit"
+              label={isEditableGym ? "Save" : "Edit"}
               disabled={loading}
-              onClick={() => setIsEditable(true)}
-            />
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {/* Gym Membership */}
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-            <h2 className="font-semibold text-xl mb-4">Gym Membership</h2>
-            <div className="flex flex-col gap-4">
-              <LabelInput
-                id="gym-candidateType"
-                label="Candidate Type"
-                className="w-full"
-                disabled
-                {...registerGym("candidateType")}
-              />
-
-              <Controller
-                name="instructor"
-                control={controlGym}
-                rules={{ required: "Instructor is required" }}
-                render={({ field, fieldState }) => (
-                  <CustomDropdown
-                    label="Instructor"
-                    options={[
-                      { label: "General Trainer", value: "General" },
-                      { label: "Personal Trainer", value: "Special" },
-                    ]}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    disabled={!isEditable}
-                    error={fieldState.error?.message}
-                    placeholder="Select Instructor"
-                    className="w-full"
-                  />
-                )}
-              />
-
-              <Controller
-                name="duration"
-                control={controlGym}
-                rules={{ required: "Duration is required" }}
-                render={({ field, fieldState }) => (
-                  <CustomDropdown
-                    label="Duration"
-                    options={[
-                      { label: "1 Month", value: "1 Month" },
-                      { label: "3 Months", value: "3 Months" },
-                      { label: "6 Months", value: "6 Months" },
-                      { label: "12 Months", value: "12 Months" },
-                    ]}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    disabled={!isEditable}
-                    error={fieldState.error?.message}
-                    placeholder="Select Duration"
-                    className="w-full"
-                  />
-                )}
-              />
-
-              <LabelInput
-                id="gym-amount"
-                label="Amount"
-                className="w-full"
-                placeholder="Enter amount"
-                disabled={!isEditable}
-                {...registerGym("amount", {
-                  required: "Amount is required",
-                  pattern: {
-                    value: /^₹?\d+(\.\d{1,2})?$/,
-                    message: "Enter a valid amount",
-                  },
-                })}
-                error={errorsGym.amount?.message}
-              />
-            </div>
-          </form>
-
-          {/* Cardio Membership */}
-          <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-            <h2 className="font-semibold text-xl mb-4">Cardio Membership</h2>
-            <div className="flex flex-col gap-4">
-              <LabelInput
-                id="cardio-candidateType"
-                label="Candidate Type"
-                className="w-full"
-                disabled
-                {...registerCardio("candidateType")}
-              />
-
-              <Controller
-                name="instructor"
-                control={controlCardio}
-                rules={{ required: "Instructor is required" }}
-                render={({ field, fieldState }) => (
-                  <CustomDropdown
-                    label="Instructor"
-                    options={[
-                      { label: "General Trainer", value: "General" },
-                      { label: "Personal Trainer", value: "Special" },
-                    ]}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    disabled={!isEditable}
-                    error={fieldState.error?.message}
-                    placeholder="Select Instructor"
-                    className="w-full"
-                  />
-                )}
-              />
-
-              <Controller
-                name="duration"
-                control={controlCardio}
-                rules={{ required: "Duration is required" }}
-                render={({ field, fieldState }) => (
-                  <CustomDropdown
-                    label="Duration"
-                    options={[
-                      { label: "1 Month", value: "1 Month" },
-                      { label: "3 Months", value: "3 Months" },
-                      { label: "6 Months", value: "6 Months" },
-                      { label: "12 Months", value: "12 Months" },
-                    ]}
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    disabled={!isEditable}
-                    error={fieldState.error?.message}
-                    placeholder="Select Duration"
-                    className="w-full"
-                  />
-                )}
-              />
-
-              <LabelInput
-                id="cardio-amount"
-                label="Amount"
-                className="w-full"
-                placeholder="Enter amount"
-                disabled={!isEditable}
-                {...registerCardio("amount", {
-                  required: "Amount is required",
-                  pattern: {
-                    value: /^₹?\d+(\.\d{1,2})?$/,
-                    message: "Enter a valid amount",
-                  },
-                })}
-                error={errorsCardio.amount?.message}
-              />
-            </div>
-          </form>
-        </div>
-
-        {/* Save Button */}
-        {isEditable && (
-          <div className="flex justify-end mt-6">
-            <PositiveButton
-              label="Save"
-              onClick={handleSubmitBoth}
-              disabled={loading}
+              onClick={handleGymToggle}
             />
           </div>
-        )}
+
+          {/* Personal Instructor */}
+          <p className="font-semibold text-gray-700 mb-2">Personal Instructor</p>
+          <div className="space-y-2 text-gray-600">
+            {Object.entries(gymPrices.personal).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span>{formatLabel(key)}</span>
+                {isEditableGym ? (
+                  <input
+                    type="text"
+                    value={`₹${value}`}
+                    onChange={(e) =>
+                      handleChange("gym", "personal", key as any, e.target.value)
+                    }
+                    className="border rounded px-2 py-1 text-right w-28"
+                  />
+                ) : (
+                  <span>₹{value.toLocaleString()}</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* General Instructor */}
+          <p className="font-semibold text-gray-700 mt-4 mb-2">
+            General Instructor
+          </p>
+          <div className="space-y-2 text-gray-600">
+            {Object.entries(gymPrices.general).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span>{formatLabel(key)}</span>
+                {isEditableGym ? (
+                  <input
+                    type="text"
+                    value={`₹${value}`}
+                    onChange={(e) =>
+                      handleChange("gym", "general", key as any, e.target.value)
+                    }
+                    className="border rounded px-2 py-1 text-right w-28"
+                  />
+                ) : (
+                  <span>₹{value.toLocaleString()}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* === Cardio Card === */}
+        <div className="border rounded-lg shadow-sm p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800">Cardio</h2>
+            <PositiveButton
+              label={isEditableCardio ? "Save" : "Edit"}
+              disabled={loading}
+              onClick={handleCardioToggle}
+            />
+          </div>
+
+          {/* Personal Instructor */}
+          <p className="font-semibold text-gray-700 mb-2">Personal Instructor</p>
+          <div className="space-y-2 text-gray-600">
+            {Object.entries(cardioPrices.personal).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span>{formatLabel(key)}</span>
+                {isEditableCardio ? (
+                  <input
+                    type="text"
+                    value={`₹${value}`}
+                    onChange={(e) =>
+                      handleChange(
+                        "cardio",
+                        "personal",
+                        key as any,
+                        e.target.value
+                      )
+                    }
+                    className="border rounded px-2 py-1 text-right w-28"
+                  />
+                ) : (
+                  <span>₹{value.toLocaleString()}</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* General Instructor */}
+          <p className="font-semibold text-gray-700 mt-4 mb-2">
+            General Instructor
+          </p>
+          <div className="space-y-2 text-gray-600">
+            {Object.entries(cardioPrices.general).map(([key, value]) => (
+              <div key={key} className="flex justify-between">
+                <span>{formatLabel(key)}</span>
+                {isEditableCardio ? (
+                  <input
+                    type="text"
+                    value={`₹${value}`}
+                    onChange={(e) =>
+                      handleChange(
+                        "cardio",
+                        "general",
+                        key as any,
+                        e.target.value
+                      )
+                    }
+                    className="border rounded px-2 py-1 text-right w-28"
+                  />
+                ) : (
+                  <span>₹{value.toLocaleString()}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

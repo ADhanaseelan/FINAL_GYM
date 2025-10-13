@@ -166,7 +166,7 @@ const MembershipDetails = () => {
       {/* Stats Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6 mb-6">
         <div className="bg-white p-4 rounded-lg shadow flex flex-col justify-center items-start">
-          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085]">
+          <p className="font-normal text-sm leading-5 tracking-normal text-[#667085] justify-start">
             Membership
           </p>
           <span className="font-bold text-2xl leading-8 tracking-normal">

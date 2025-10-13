@@ -444,7 +444,7 @@ const NewUser: React.FC = () => {
                 })}
                 error={errors.password?.message}
               />
-              <div className="absolute top-1/2 right-0 transform -translate-y-1/2 flex items-center pr-4 pt-3">
+              <div className="absolute top-1/2 right-0 transform -translate-y-1/2 flex items-center pr-8 pt-3">
                 <button
                   type="button"
                   tabIndex={-1}

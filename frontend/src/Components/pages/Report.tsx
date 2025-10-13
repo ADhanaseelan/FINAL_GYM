@@ -260,7 +260,7 @@ const fetchPaymentChart = async () => {
 
   // ---------------- Render ----------------
   return (
-    <div className="space-y-8 bg-gray-50 p-6 min-h-screen">
+    <div className="space-y-8 bg-gray-50 p-6 min-h-screen max-sm:px-2">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
@@ -320,71 +320,76 @@ const fetchPaymentChart = async () => {
 
       {/* Revenue Chart - Full width with scroll */}
       <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="w-full bg-white p-6 rounded-xl border border-gray-100 shadow-sm"
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Revenue Analysis</h2>
-          <div className="flex items-center space-x-6">
-            <div className="flex items-center gap-2">
-              <div className="h-0.5 w-5" style={{ backgroundColor: "#f97316" }} />
-              <span className="text-sm font-medium text-gray-600">Gym</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-0.5 w-5 bg-blue-500"></div>
-              <span className="text-sm font-medium text-gray-600">Cardio</span>
-            </div>
-            <select
-              value={selectedRevenuePeriod}
-              onChange={(e) => setSelectedRevenuePeriod(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            >
-              <option value="Month">Month</option>
-              <option value="Year">Year</option>
-            </select>
-          </div>
-        </div>
+  initial={{ opacity: 0, y: 40 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.8 }}
+  className="w-full bg-white p-6 rounded-xl shadow-sm"
+>
+  <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
+  {/* Title */}
+  <h2 className="text-xl font-bold text-gray-900 sm:text-lg max-sm:w-full">
+    Revenue Analysis
+  </h2>
 
-        {/* Scrollable container for mobile */}
-        <div className="overflow-x-auto">
-          <div className="min-w-[700px] h-[350px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={getFilteredRevenueData()}
-                margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-              >
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                <XAxis
-                  dataKey={selectedRevenuePeriod === "Month" ? "day" : "month"}
-                />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="gym"
-                  stroke="#f97316"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="cardio"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={false}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+  {/* Legends + Select */}
+  <div className="flex flex-wrap items-center gap-4 sm:gap-6 justify-end max-sm:w-full">
+    {/* Legends */}
+    <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center gap-2">
+        <div className="h-0.5 w-5 bg-orange-500" />
+        <span className="text-sm font-medium text-gray-600">Gym</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="h-0.5 w-5 bg-blue-500" />
+        <span className="text-sm font-medium text-gray-600">Cardio</span>
+      </div>
+    </div>
 
-        <div className="flex justify-between text-sm mt-2">
-          <span>Top Revenue : Gym</span>
-          <span>{getPeakRevenueInfo()}</span>
-        </div>
-      </motion.div>
+    {/* Select Dropdown */}
+    <select
+      value={selectedRevenuePeriod}
+      onChange={(e) => setSelectedRevenuePeriod(e.target.value)}
+      className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+    >
+      <option value="Month">Month</option>
+      <option value="Year">Year</option>
+    </select>
+  </div>
+</div>
+
+
+  {/* ✅ Scrollable Chart Container for Mobile */}
+  <div className="overflow-x-auto">
+    <div className="min-w-[700px] sm:min-w-full h-[350px]">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart
+          data={getFilteredRevenueData()}
+          margin={{ top: 10, right: 20, bottom: 30, left: 0 }}
+        >
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis
+            dataKey={selectedRevenuePeriod === "Month" ? "day" : "month"}
+            interval={0} // ✅ Show all labels
+              // ✅ Rotate for better readability
+            textAnchor="end"
+            tick={{ fontSize: 10 }}
+            height={60} // ✅ Add extra space for rotated labels
+          />
+          <YAxis />
+          <Tooltip />
+          <Line type="monotone" dataKey="gym" stroke="#f97316" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="cardio" stroke="#3b82f6" strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+
+  <div className="flex justify-between text-sm mt-2">
+    <span>Top Revenue : Gym</span>
+    <span>{getPeakRevenueInfo()}</span>
+  </div>
+</motion.div>
+
 
       {/* Bar + Pie side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -395,7 +400,7 @@ const fetchPaymentChart = async () => {
           transition={{ duration: 0.8 }}
           className="bg-white p-6 rounded-xl shadow-md border border-gray-100"
         >
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-4 ov">
             <h2 className="text-lg font-bold">Payment Type Analysis</h2>
           </div>
           <ResponsiveContainer width="100%" height={300}>
@@ -430,7 +435,7 @@ const fetchPaymentChart = async () => {
               <option value="Year">Year</option>
             </select>
           </div>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={350}>
             <PieChart>
               <Pie
                 data={getFilteredMembershipData()}

@@ -77,7 +77,7 @@ router.post(
   registerProgress
 );
 router.post("/get-candidate-info", authMiddleware, getCandidateInformation);
-router.post("/add-login", authMiddleware, registerLogin);
+router.post("/add-login",registerLogin);
 router.post("/login", validateLogin, returnToken);
 router.post("/logout", handleLogout);
 router.post("/get-dashboard", authMiddleware, getDashboard);

@@ -18,7 +18,7 @@
   - cd frontend
   - npm install  # to install the necessary packages.
   - npm run dev  # to run the program.
-
+ 
 # Backend
   - cd backend  # in another terminal.
   - npm install  # to install the necessary packages.
